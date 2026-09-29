@@ -1,0 +1,238 @@
+# Every Celery service runs the single root app in celery_app.py, which merges the
+# per-module queue/route/beat registries under core/, market_planner/ and vapi/ —
+# for the products this deployment has installed. Worker --queues values must stay in
+# sync with the TASK_QUEUES those modules export.
+#
+# PROFILES
+# --------
+# Each optional product's workers carry that product's profile, so a deployment starts
+# only the workers for what it bought:
+#
+#   docker compose --profile telephone_agent up -d     # core + telephone workers
+#   docker compose --profile all up -d                 # everything (pre-profile behaviour)
+#   COMPOSE_PROFILES=market_planner docker compose up -d
+#
+# NOTE THE BEHAVIOUR CHANGE: a bare `docker compose up` now starts app, cache, beat,
+# flower and the core workers, but NO product workers — services with a profile are
+# opt-in. Use `--profile all` to get what a bare `up` used to give you.
+#
+# core's workers are deliberately unprofiled: core is never optional.
+# celery-beat is unprofiled and safe to always run — celery_app filters BEAT_SCHEDULE
+# to installed products, so it will not schedule an uninstalled product's tasks.
+#
+# CLIENT SOURCE TREES (builder never has unpaid code)
+# --------------------------------------------------
+# Preferred: export a subset tree, then build from that directory only:
+#
+#   python scripts/export_client_tree.py --products market_planner --out /tmp/client_mp
+#   cd /tmp/client_mp && docker compose build && docker compose --profile market_planner up -d
+#
+# That tree contains only core + shared + paid products (+ matching migrations).
+# Optional: INSTALL_PRODUCTS still works as a full-repo Docker filter, but is not
+# required when the source tree is already subset.
+#
+# Local `volumes: .:/app` remounts whatever directory you compose from. For client
+# deploys, compose from the exported tree (or drop the bind mount).
+#
+# Every worker pins --concurrency and -P threads: the prefork default forks one child
+# per CPU, and a child of this image costs enough memory that a full set of workers
+# gets OOM-killed on a developer machine.
+
+x-app-base: &app-base
+  image: marketing_app_image
+
+  env_file:
+    - .env
+
+  # POSTGRES_* and REDIS_URL come from .env; resolve_database_url() prefers them over
+  # DATABASE_URL, so only the values the app cannot infer are set here.
+  environment:
+    DOCKER: "1"
+    GOOGLE_APPLICATION_CREDENTIALS: /app/firebase-service-account.json
+
+  volumes:
+    - .:/app
+    - ./firebase-service-account.json:/app/firebase-service-account.json:ro
+
+  networks:
+    - marketing_network
+
+  restart: unless-stopped
+
+# The app container owns migrations, so everything else waits for it to serve traffic.
+x-depends-on-app: &depends-on-app
+  cache:
+    condition: service_healthy
+  app:
+    condition: service_healthy
+
+services:
+  app:
+    <<: *app-base
+    container_name: marketing_app
+    build:
+      context: .
+      args:
+        # Empty = ship all products. Set in .env or the shell for client images.
+        INSTALL_PRODUCTS: ${INSTALL_PRODUCTS:-}
+
+    ports:
+      - "8000:8000"
+
+    depends_on:
+      cache:
+        condition: service_healthy
+
+    # Use `sh` + absolute path: Windows bind mounts often break `./wait-for-db.sh` (exec bit / CRLF).
+    entrypoint: ["sh", "/app/entrypoint.sh"]
+    command:
+      - sh
+      - /app/wait-for-db.sh
+      - uvicorn
+      - main:app
+      - --host
+      - 0.0.0.0
+      - --port
+      - "8000"
+      - --reload
+
+    healthcheck:
+      test:
+        - CMD
+        - python3
+        - -c
+        - import urllib.request; urllib.request.urlopen("http://localhost:8000/openapi.json", timeout=5)
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 40s
+
+  cache:
+    container_name: marketing_redis
+    image: redis:7-alpine
+
+    command: ["redis-server", "--appendonly", "yes", "--maxmemory", "256mb"]
+
+    ports:
+      - "6379:6379"
+
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+    networks:
+      - marketing_network
+
+    restart: unless-stopped
+
+  flower:
+    <<: *app-base
+    container_name: marketing_flower
+
+    depends_on: *depends-on-app
+
+    command: celery -A celery_app flower --address=0.0.0.0 --port=5555
+
+    ports:
+      - "5555:5555"
+
+  celery-beat:
+    <<: *app-base
+    container_name: marketing_celery_beat
+
+    depends_on: *depends-on-app
+
+    command: celery -A celery_app beat --loglevel=info
+
+  # --- core ---
+
+  celery-worker-email:
+    <<: *app-base
+    container_name: marketing_worker_email
+
+    depends_on: *depends-on-app
+
+    command: celery -A celery_app worker --loglevel=info --concurrency=1 -P threads --queues=email-queue -n email-worker@%h
+
+    mem_limit: 1g
+
+  celery-worker-update-company:
+    <<: *app-base
+    container_name: marketing_worker_update_company
+
+    depends_on: *depends-on-app
+
+    command: celery -A celery_app worker --loglevel=info --concurrency=1 -P threads --queues=update-company-queue -n update-company-worker@%h
+
+  # --- market_planner ---
+
+  celery-worker-draft:
+    <<: *app-base
+    container_name: marketing_worker_draft
+    profiles: ["market_planner", "all"]
+
+    depends_on: *depends-on-app
+
+    command: celery -A celery_app worker --loglevel=info --concurrency=2 -P threads --queues=draft-posts-queue -n draft-worker@%h
+
+  celery-worker-publish:
+    <<: *app-base
+    container_name: marketing_worker_publish
+    profiles: ["market_planner", "all"]
+
+    depends_on: *depends-on-app
+
+    command: celery -A celery_app worker --loglevel=info --concurrency=1 -P threads --queues=publish-posts-queue -n publish-worker@%h
+
+  celery-worker-save-post:
+    <<: *app-base
+    container_name: marketing_worker_save_post
+    profiles: ["market_planner", "all"]
+
+    depends_on: *depends-on-app
+
+    command: celery -A celery_app worker --loglevel=info --concurrency=2 -P threads --queues=save-post-queue -n save-post-worker@%h
+
+  celery-worker-update-post:
+    <<: *app-base
+    container_name: marketing_worker_update_post
+    profiles: ["market_planner", "all"]
+
+    depends_on: *depends-on-app
+
+    command: celery -A celery_app worker --loglevel=info --concurrency=2 -P threads --queues=update-post-queue -n update-post-worker@%h
+
+  celery-worker-delete-post:
+    <<: *app-base
+    container_name: marketing_worker_delete_post
+    profiles: ["market_planner", "all"]
+
+    depends_on: *depends-on-app
+
+    command: celery -A celery_app worker --loglevel=info --concurrency=2 -P threads --queues=delete-post-queue -n delete-post-worker@%h
+
+  celery-worker-whatsapp-match-replies:
+    <<: *app-base
+    container_name: marketing_worker_whatsapp_match_replies
+    profiles: ["market_planner", "all"]
+
+    depends_on: *depends-on-app
+
+    command: celery -A celery_app worker --loglevel=info --concurrency=2 -P threads --queues=whatsapp-match-replies-queue -n whatsapp-match-replies-worker@%h
+
+  # --- telephone_agent / vapi ---
+
+  celery-worker-vapi-dictionary:
+    <<: *app-base
+    container_name: marketing_worker_vapi_dictionary
+    profiles: ["telephone_agent", "all"]
+
+    depends_on: *depends-on-app
+
+    command: celery -A celery_app worker --loglevel=info --concurrency=1 -P threads --queues=vapi-dictionary-queue -n vapi-dictionary-worker@%h
+
+networks:
+  marketing_network:
+    driver: bridge

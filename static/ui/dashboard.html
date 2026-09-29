@@ -1,0 +1,1883 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Call Analytics Dashboard</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    :root {
+      --primary: #10b981;
+      --primary-dark: #059669;
+      --primary-light: #d1fae5;
+      --bg: #f8fafc;
+      --surface: #ffffff;
+      --text-main: #1e293b;
+      --text-muted: #64748b;
+      --border: #e2e8f0;
+      --radius: 16px;
+      --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: var(--bg);
+      color: var(--text-main);
+      line-height: 1.5;
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 32px 40px;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    @media (max-width: 768px) {
+      .container {
+        padding: 20px 16px;
+        gap: 16px;
+      }
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 24px 40px;
+      background: transparent;
+      gap: 16px;
+    }
+
+    @media (max-width: 1024px) {
+      header {
+        padding: 24px 16px;
+      }
+    }
+
+    @media (max-width: 768px) {
+      header {
+        flex-direction: column;
+        align-items: flex-start;
+        padding: 16px 0;
+      }
+
+      .header-right {
+        width: 100%;
+        justify-content: space-between;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .header-right {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .header-right>* {
+        width: 100%;
+      }
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .header-icon {
+      width: 44px;
+      height: 44px;
+      background: var(--primary);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+    }
+
+    .header-title h1 {
+      font-size: 20px;
+      font-weight: 700;
+    }
+
+    .header-title p {
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    select,
+    .toggle-group,
+    .btn-primary,
+    .btn-secondary {
+      height: 40px;
+      padding: 0 16px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    select {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text-main);
+      outline: none;
+    }
+
+    .toggle-group {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      padding: 4px;
+      gap: 4px;
+    }
+
+    .toggle-btn {
+      padding: 6px 16px;
+      border-radius: 6px;
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .toggle-btn.active {
+      background: #f1f5f9;
+      color: var(--text-main);
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: white;
+      border: none;
+    }
+
+    .btn-secondary {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text-main);
+      text-decoration: none;
+    }
+
+    /* Card System */
+    .card {
+      background: var(--surface);
+      border-radius: var(--radius);
+      padding: 24px;
+      box-shadow: var(--shadow);
+      border: 1px solid var(--border);
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 24px;
+      gap: 16px;
+    }
+
+    @media (max-width: 768px) {
+      .card-header {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .header-stats {
+        width: 100%;
+        justify-content: space-between;
+        gap: 12px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .header-stats {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .h-stat {
+        text-align: left;
+      }
+    }
+
+    .header-stats {
+      display: flex;
+      gap: 24px;
+    }
+
+    .h-stat {
+      text-align: right;
+    }
+
+    .h-stat-label {
+      font-size: 12px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      font-weight: 700;
+    }
+
+    .h-stat-value {
+      font-size: 24px;
+      font-weight: 800;
+      margin-top: 2px;
+    }
+
+    .text-green {
+      color: var(--primary);
+    }
+
+    .text-teal {
+      color: #14b8a6;
+    }
+
+    /* Metrics Row */
+    .metrics-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+    }
+
+    @media (max-width: 1024px) {
+      .metrics-row {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    @media (max-width: 480px) {
+      .metrics-row {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .metric-card {
+      background: var(--surface);
+      border-radius: var(--radius);
+      padding: 20px;
+      box-shadow: var(--shadow);
+      border: 1px solid var(--border);
+    }
+
+    .metric-icon-box {
+      width: 32px;
+      height: 32px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 12px;
+    }
+
+    .bg-green-soft {
+      background: #ecfdf5;
+      color: #059669;
+    }
+
+    .bg-teal-soft {
+      background: #f0fdfa;
+      color: #0d9488;
+    }
+
+    .bg-purple-soft {
+      background: #faf5ff;
+      color: #7c3aed;
+    }
+
+    .bg-orange-soft {
+      background: #fff7ed;
+      color: #ea580c;
+    }
+
+    .bg-red-soft {
+      background: #fef2f2;
+      color: #dc2626;
+    }
+
+    .bg-blue-soft {
+      background: #eff6ff;
+      color: #2563eb;
+    }
+
+    .bg-yellow-soft {
+      background: #fefce8;
+      color: #ca8a04;
+    }
+
+    .metric-label {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+    }
+
+    .metric-value {
+      font-size: 20px;
+      font-weight: 800;
+      margin: 4px 0;
+    }
+
+    .metric-sub {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .trend-up {
+      color: #10b981;
+      font-weight: 700;
+    }
+
+    /* Collapsible */
+    .collapsible-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .chevron-icon {
+      transition: transform 0.3s ease;
+      color: var(--text-muted);
+    }
+
+    .card-content {
+      overflow: hidden;
+      transition: max-height 0.3s ease, opacity 0.3s ease;
+      max-height: 2000px;
+      opacity: 1;
+      margin-top: 24px;
+    }
+
+    .card-content.collapsed {
+      max-height: 0;
+      opacity: 0;
+      margin-top: 0;
+      pointer-events: none;
+    }
+
+    .collapsible-header.collapsed .chevron-icon {
+      transform: rotate(-90deg);
+    }
+
+    /* Ratings */
+    .ratings-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 24px;
+      margin-top: 16px;
+    }
+
+    .agent-rating-card {
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+    }
+
+    .agent-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .agent-avatar {
+      width: 36px;
+      height: 36px;
+      background: #f1f5f9;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 13px;
+    }
+
+    .agent-stars {
+      color: #f59e0b;
+      font-size: 13px;
+    }
+
+    .rating-bars {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .rating-bar-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .rating-bar-label {
+      width: 110px;
+    }
+
+    .rating-bar-bg {
+      flex: 1;
+      height: 6px;
+      background: #f1f5f9;
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .rating-bar-fill {
+      height: 100%;
+      background: var(--primary);
+      border-radius: 4px;
+    }
+
+    /* Insights List */
+    .list-row {
+      display: flex;
+      align-items: flex-start;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--border);
+      gap: 16px;
+    }
+
+    .list-row.clickable {
+      cursor: pointer;
+    }
+
+    .list-row.clickable:hover {
+      background: #f9fafb;
+    }
+
+    .list-num {
+      font-family: monospace;
+      font-size: 13px;
+      color: var(--text-muted);
+      padding-top: 2px;
+    }
+
+    .list-text {
+      flex: 1;
+      font-size: 13px;
+      font-weight: 500;
+    }
+
+    .list-count {
+      font-size: 11px;
+      background: #f1f5f9;
+      padding: 2px 8px;
+      border-radius: 10px;
+      font-weight: 700;
+    }
+
+    .issue-bar-container {
+      width: 100%;
+      height: 4px;
+      background: #f1f5f9;
+      border-radius: 2px;
+      margin-top: 6px;
+    }
+
+    .issue-bar-fill {
+      height: 100%;
+      background: #f87171;
+      border-radius: 2px;
+    }
+
+    .bottom-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      margin-top: 24px;
+      align-items: flex-start;
+    }
+
+    @media (max-width: 768px) {
+      .bottom-grid {
+        grid-template-columns: 1fr;
+        gap: 16px;
+      }
+    }
+
+    .linked-call-card {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 24px;
+      margin-bottom: 24px;
+      background: #fafafa;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+    }
+
+    .linked-call-header {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+
+    @media (max-width: 640px) {
+      .linked-call-card {
+        padding: 16px;
+      }
+
+      .linked-call-header {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .linked-call-header>div:last-child {
+        text-align: left !important;
+      }
+    }
+
+    /* Modals */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s;
+      z-index: 1000;
+    }
+
+    .modal-overlay.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .modal-content {
+      background: var(--surface);
+      width: 95%;
+      max-width: 500px;
+      border-radius: var(--radius);
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+      transform: translateY(20px);
+      transition: transform 0.2s;
+    }
+
+    @media (max-width: 480px) {
+
+      .modal-header,
+      .modal-body,
+      .modal-footer {
+        padding: 16px;
+      }
+    }
+
+    .modal-overlay.active .modal-content {
+      transform: translateY(0);
+    }
+
+    .modal-header {
+      padding: 24px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .modal-body {
+      padding: 24px;
+    }
+
+    .modal-footer {
+      padding: 16px 24px;
+      background: #f9fafb;
+      border-top: 1px solid var(--border);
+      border-radius: 0 0 var(--radius) var(--radius);
+      display: flex;
+      justify-content: flex-end;
+      gap: 12px;
+    }
+
+    /* Accuracy Badges */
+    .accuracy-badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 10px;
+      font-weight: 700;
+      gap: 4px;
+    }
+
+    .accuracy-badge.green {
+      background: #dcfce7;
+      color: #166534;
+    }
+
+    .accuracy-badge.yellow {
+      background: #fef9c3;
+      color: #854d0e;
+    }
+
+    .accuracy-badge.red {
+      background: #fee2e2;
+      color: #991b1b;
+    }
+
+    .accuracy-badge.muted {
+      background: #f3f4f6;
+      color: #4b5563;
+    }
+
+    .ai-summary-box {
+      background: #f0f7ff;
+      border: 1px solid #cce3ff;
+      border-radius: 8px;
+      padding: 16px;
+      margin-top: 12px;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    .loader {
+      width: 16px;
+      height: 16px;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-radius: 50%;
+      border-top-color: #fff;
+      animation: spin 1s infinite;
+      display: none;
+    }
+
+    /* Form Styles */
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text-main);
+      margin-bottom: 10px;
+    }
+
+    #reportPrompt {
+      width: 100%;
+      min-height: 140px;
+      padding: 16px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: #f8fafc;
+      font-family: 'Inter', sans-serif;
+      font-size: 13px;
+      line-height: 1.6;
+      color: var(--text-main);
+      resize: vertical;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      box-sizing: border-box;
+    }
+
+    #reportPrompt:focus {
+      outline: none;
+      border-color: var(--primary);
+      background: #fff;
+      box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.1);
+    }
+
+    #reportPrompt::placeholder {
+      color: #94a3b8;
+    }
+
+    /* Transcript Styles */
+    .transcript-container {
+      margin-top: 16px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: #fafafa;
+      overflow: hidden;
+    }
+
+    .transcript-header {
+      background: #f1f5f9;
+      padding: 10px 16px;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      cursor: pointer;
+    }
+
+    .transcript-body {
+      padding: 16px;
+      max-height: 250px;
+      overflow-y: auto;
+      font-size: 13px;
+      line-height: 1.6;
+      white-space: pre-wrap;
+      color: var(--text-main);
+    }
+
+    .transcript-line {
+      margin-bottom: 8px;
+    }
+
+    .role-assistant {
+      color: var(--primary-dark);
+      font-weight: 600;
+    }
+
+    .role-user {
+      color: #2563eb;
+      font-weight: 600;
+    }
+
+    .transcript-body.collapsed {
+      max-height: 0;
+      padding-top: 0;
+      padding-bottom: 0;
+      opacity: 0;
+      pointer-events: none;
+    }
+    .hidden {
+      display: none !important;
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- Auth setup bar -->
+  <div class="setup-bar" id="setupBar" style="display: flex; gap: 12px; align-items: flex-end; padding: 16px 24px; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; margin: 20px auto; max-width: 1400px; width: calc(100% - 40px); box-shadow: var(--shadow);">
+    <div style="display: flex; flex-direction: column; gap: 4px;">
+      <label for="adminSecret" style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 4px; display: block;">Admin Secret</label>
+      <input id="adminSecret" type="password" placeholder="X-ADMIN-SECRET" style="height: 38px; padding: 0 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 13px; min-width: 240px; background: #fff;" />
+    </div>
+    <button type="button" onclick="saveAuth()" class="btn-primary" style="height: 38px; padding: 0 20px; font-size: 13px; font-weight: 600; border-radius: 8px; border: none; cursor: pointer; background: var(--primary); color: #fff; transition: background 0.2s;">Connect</button>
+    <span id="setupBarHint" style="font-size: 12px; color: var(--text-muted); align-self: center; margin-left: 12px;">Enter admin secret to load statistics.</span>
+  </div>
+
+  <div id="authenticatedShell" class="hidden">
+
+  <header>
+    <div class="header-left">
+      <div class="header-icon">
+        <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor">
+          <path
+            d="M20 15.5c-1.25 0-2.45-.2-3.57-.57a1.02 1.02 0 0 0-1.02.24l-2.2 2.2a15.045 15.045 0 0 1-6.59-6.59l2.2-2.21a.96.96 0 0 0 .25-1A11.36 11.36 0 0 1 8.5 4c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1 0 9.39 7.61 17 17 17 .55 0 1-.45 1-1v-3.5c0-.55-.45-1-1-1zM19 12h2a9 9 0 0 0-9-9v2c3.87 0 7 3.13 7 7zm-4 0h2c0-2.76-2.24-5-5-5v2c1.66 0 3 1.34 3 3z" />
+        </svg>
+      </div>
+      <div class="header-title">
+        <h1>Call Analytics</h1>
+        <p>Monitor agent performance & insights</p>
+      </div>
+    </div>
+    <div class="header-right">
+      <a href="/qa" class="btn-secondary">Review Mode</a>
+      <select id="agentSelect">
+        <option value="all">All Agents</option>
+      </select>
+      <div class="toggle-group" id="periodToggle">
+        <button class="toggle-btn" data-val="week">Week</button>
+        <button class="toggle-btn active" data-val="month">Month</button>
+        <button class="toggle-btn" data-val="all">All Time</button>
+      </div>
+      <button class="btn-primary" onclick="openModal()">
+        ✨ Generate AI Report
+      </button>
+    </div>
+  </header>
+
+  <div class="container">
+    <!-- Section 1: Call Volume -->
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Call Volume</div>
+          <div class="card-subtitle">Total vs unique calls over time</div>
+        </div>
+        <div class="header-stats">
+          <div class="h-stat">
+            <div class="h-stat-label">Total</div>
+            <div class="h-stat-value text-green" id="headerTotal">0</div>
+          </div>
+          <div class="h-stat">
+            <div class="h-stat-label">Unique</div>
+            <div class="h-stat-value text-teal" id="headerUnique">0</div>
+          </div>
+        </div>
+      </div>
+      <div class="chart-container" style="height: 300px;">
+        <canvas id="volumeChart"></canvas>
+      </div>
+    </div>
+
+    <!-- Section 2: Metrics Grid -->
+    <div class="metrics-row">
+      <!-- Lines In Use -->
+      <div class="metric-card">
+        <div class="metric-icon-box bg-green-soft">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+            stroke-linecap="round" stroke-linejoin="round">
+            <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
+          </svg>
+        </div>
+        <div class="metric-label">Lines In Use Now</div>
+        <div class="metric-value" id="linesInUse">0 / 10</div>
+        <div class="metric-sub">Vapi concurrent calls</div>
+      </div>
+
+      <!-- Peak Today -->
+      <div class="metric-card">
+        <div class="metric-icon-box bg-teal-soft">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+            stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline>
+            <polyline points="17 6 23 6 23 12"></polyline>
+          </svg>
+        </div>
+        <div class="metric-label">Peak Today</div>
+        <div class="metric-value" id="peakToday">0 / 10</div>
+        <div class="metric-sub" id="peakTodayTime">at —</div>
+      </div>
+
+      <!-- Avg Duration -->
+      <div class="metric-card">
+        <div class="metric-icon-box bg-green-soft">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+            stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <polyline points="12 6 12 12 16 14"></polyline>
+          </svg>
+        </div>
+        <div class="metric-label">Avg Duration</div>
+        <div class="metric-value" id="avgDuration">0m 0s</div>
+        <div class="metric-sub">Across all calls</div>
+      </div>
+
+      <!-- Longest Call -->
+      <div class="metric-card" id="longestCallCard" style="cursor: pointer;" onclick="openLongestCallModal()">
+        <div class="metric-icon-box bg-purple-soft">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+            stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <polyline points="12 6 12 12 16 14"></polyline>
+          </svg>
+        </div>
+        <div class="metric-label">Longest Call</div>
+        <div class="metric-value" id="longestCall">0m 0s</div>
+        <div class="metric-sub">Peak recorded</div>
+      </div>
+
+      <!-- Total Minutes -->
+      <div class="metric-card">
+        <div class="metric-icon-box bg-orange-soft">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+            stroke-linecap="round" stroke-linejoin="round">
+            <path
+              d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z">
+            </path>
+          </svg>
+        </div>
+        <div class="metric-label">Total Minutes</div>
+        <div class="metric-value" id="totalMinutes">0</div>
+        <div class="metric-sub">Sum of all durations</div>
+      </div>
+
+
+
+      <!-- Appointments -->
+      <div class="metric-card" id="appointmentsCard" style="cursor: pointer;" onclick="openAppointmentsModal()">
+        <div class="metric-icon-box bg-yellow-soft">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+            stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+            <line x1="16" y1="2" x2="16" y2="6"></line>
+            <line x1="8" y1="2" x2="8" y2="6"></line>
+            <line x1="3" y1="10" x2="21" y2="10"></line>
+          </svg>
+        </div>
+        <div class="metric-label">Appointments</div>
+        <div class="metric-value" id="appointments">0</div>
+        <div class="metric-sub">Booked via AI</div>
+      </div>
+    </div>
+
+    <!-- Section 3: Timing Distribution -->
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <div class="card-title">Call Timing Distribution</div>
+          <div class="card-subtitle">When are we busiest?</div>
+        </div>
+        <div class="toggle-group" id="timingToggle">
+          <button class="toggle-btn active" data-val="hourly">Hourly</button>
+          <button class="toggle-btn" data-val="intervals">Intervals</button>
+        </div>
+      </div>
+      <div class="chart-container" style="height: 200px; margin-top:24px;">
+        <canvas id="timingChart"></canvas>
+      </div>
+    </div>
+
+    <!-- Full Width Top Questions -->
+    <div class="card">
+      <div class="collapsible-header" onclick="toggleSection(this)">
+        <div style="display:flex; align-items:center; gap:16px; flex:1;">
+          <div>
+            <div class="card-title" style="display:flex;align-items:center;gap:8px;">
+              <span style="color:#10b981">💬</span> Top Questions
+            </div>
+            <div class="card-subtitle" id="faqsSubtitle">FAQ generation from user inquiries</div>
+          </div>
+          <div class="card-header-filters" onclick="event.stopPropagation()" style="display:flex; gap:8px; margin-left:auto; margin-right:16px; align-items:center;">
+            <button onclick="exportFaqsCsv(event)" style="padding: 6px 12px; border-radius: 6px; border: 1px solid var(--border-color); background: var(--bg-card); color: var(--text-main); font-size: 11px; cursor: pointer; display:flex; align-items:center; gap:4px;" title="Export to CSV">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+              CSV
+            </button>
+            <select id="faqAgentSelect" onchange="fetchFaqInsights()" style="padding: 6px 12px; border-radius: 6px; border: 1px solid var(--border-color); background: var(--bg-card); color: var(--text-main); font-size: 11px; cursor: pointer;">
+              <option value="all">All Agents</option>
+            </select>
+            <select id="faqPeriodSelect" onchange="fetchFaqInsights()" style="padding: 6px 12px; border-radius: 6px; border: 1px solid var(--border-color); background: var(--bg-card); color: var(--text-main); font-size: 11px; cursor: pointer;">
+              <option value="week">Week</option>
+              <option value="month" selected>Month</option>
+              <option value="all">All Time</option>
+            </select>
+          </div>
+        </div>
+        <svg class="chevron-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="6 9 12 15 18 9"></polyline>
+        </svg>
+      </div>
+      <div class="card-content">
+        <div id="faqsList">
+          <div style="padding:16px;color:var(--text-muted);font-size:13px;">Analyzing transcripts...</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bottom Grid for Issues and Ratings -->
+    <div class="bottom-grid">
+      <!-- Top Issues -->
+      <div class="card">
+        <div class="collapsible-header collapsed" onclick="toggleSection(this)">
+          <div style="display:flex; align-items:center; gap:16px; flex:1;">
+            <div>
+              <div class="card-title" style="display:flex;align-items:center;gap:8px;">
+                <span style="color:#ef4444">⚠️</span> Top Issues
+              </div>
+              <div class="card-subtitle" id="issuesSubtitle">Problems identified by human reviewers</div>
+            </div>
+            <div class="card-header-filters" onclick="event.stopPropagation()" style="display:flex; gap:8px; margin-left:auto; margin-right:16px; align-items:center;">
+              <button onclick="exportIssuesCsv(event)" style="padding: 6px 12px; border-radius: 6px; border: 1px solid var(--border-color); background: var(--bg-card); color: var(--text-main); font-size: 11px; cursor: pointer; display:flex; align-items:center; gap:4px;" title="Export to CSV">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                CSV
+              </button>
+              <select id="issueAgentSelect" onchange="fetchIssueInsights()" style="padding: 6px 12px; border-radius: 6px; border: 1px solid var(--border-color); background: var(--bg-card); color: var(--text-main); font-size: 11px; cursor: pointer;">
+                <option value="all">All Agents</option>
+              </select>
+              <select id="issuePeriodSelect" onchange="fetchIssueInsights()" style="padding: 6px 12px; border-radius: 6px; border: 1px solid var(--border-color); background: var(--bg-card); color: var(--text-main); font-size: 11px; cursor: pointer;">
+                <option value="week">Week</option>
+                <option value="month" selected>Month</option>
+                <option value="all">All Time</option>
+              </select>
+            </div>
+          </div>
+          <svg class="chevron-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="6 9 12 15 18 9"></polyline>
+          </svg>
+        </div>
+        <div class="card-content collapsed">
+          <div id="issuesList">
+            <div style="padding:16px;color:var(--text-muted);font-size:13px;">Analyzing transcripts...</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Agent Ratings (Col 2) -->
+      <div class="card">
+        <div class="collapsible-header collapsed" onclick="toggleSection(this)">
+          <div>
+            <div class="card-title">Agent Ratings</div>
+            <div class="card-subtitle">Performance scores (1-5 scale)</div>
+          </div>
+          <svg class="chevron-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="6 9 12 15 18 9"></polyline>
+          </svg>
+        </div>
+        <div class="card-content collapsed">
+          <div class="ratings-grid" id="ratingsGrid">
+            <div style="color:var(--text-muted); font-size:14px; padding:20px;">Loading ratings...</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  </div>
+  </div> <!-- closes authenticatedShell -->
+
+  <!-- AI Report Modal -->
+  <div class="modal-overlay" id="reportModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Generate AI Report</h3>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Additional Instructions / Focus Area</label>
+          <textarea id="reportPrompt"
+            placeholder="E.g. Focus on billing complaints and hardware issues, or provide a deep dive into Sarah's performance this month..."></textarea>
+        </div>
+        <p style="font-size:12px; color:var(--text-muted);">
+          The AI will compile all call data and summaries for the selected agent and time frame into a beautiful,
+          printable HTML document.
+        </p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary" onclick="closeModal()">Cancel</button>
+        <button class="btn-primary" id="btnGenerateReport" onclick="generateReport()">
+          <span id="genText">Generate & Download PDF</span>
+          <span class="loader" id="genLoader"></span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Issue Details Modal -->
+  <div class="modal-overlay" id="issueDetailsModal" onclick="if(event.target === this) closeIssueModal()">
+    <div class="modal-content large" style="width: 800px; max-width: 95vw;">
+      <div class="modal-header">
+        <h3 id="issueModalTitle">Issue Details</h3>
+      </div>
+      <div class="modal-body" id="issueModalBody" style="max-height: 70vh; overflow-y: auto; padding: 24px;">
+        <!-- Calls will be rendered here -->
+      </div>
+      <div class="modal-footer">
+        <button class="btn-primary" onclick="closeIssueModal()">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let volumeChartInst = null;
+    let timingChartInst = null;
+    let currentAgent = 'all';
+    let currentPeriod = 'month';
+    let timingMode = 'hourly';
+    let lastDistributionData = null;
+    let lastAppointmentCallIds = [];
+    let lastLongestCallId = null;
+    let callDetailsCache = {};
+    let faqFetchId = 0;
+    let issueFetchId = 0;
+
+    // Auth — reads the same key stored by analytics.html
+    const STORAGE_KEY = 'voice_analytics_config';
+    let adminSecret = '';
+
+    function setAuthenticated(on) {
+      document.getElementById('authenticatedShell').classList.toggle('hidden', !on);
+    }
+
+    function loadConfig() {
+      const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+      adminSecret = (saved.adminSecret || '').trim();
+      document.getElementById('adminSecret').value = adminSecret;
+      setAuthenticated(Boolean(adminSecret));
+    }
+
+    function saveAuth() {
+      adminSecret = document.getElementById('adminSecret').value.trim();
+      if (!adminSecret) {
+        setAuthenticated(false);
+        alert('Enter admin secret and click Connect.');
+        return;
+      }
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({
+        ...JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}'),
+        adminSecret
+      }));
+      setAuthenticated(true);
+      fetchAgents();
+      fetchDashboard();
+    }
+
+    async function fetchAgents() {
+      if (!adminSecret) return;
+      try {
+        const res = await fetch('/api/quality/agents', { headers: authHeaders() });
+        const data = await res.json();
+        
+        const populateSelect = (elementId, currentValue) => {
+          const sel = document.getElementById(elementId);
+          if (!sel) return;
+          sel.innerHTML = '<option value="all">All Agents</option>';
+          data.agents.forEach(a => {
+            const opt = document.createElement('option');
+            opt.value = a.filter_key;
+            const companyStr = a.company_name ? `${a.company_name} — ` : '';
+            opt.innerText = `${companyStr}${a.agent_name}`;
+            sel.appendChild(opt);
+          });
+          sel.value = currentValue;
+        };
+
+        populateSelect('agentSelect', currentAgent);
+        populateSelect('faqAgentSelect', currentAgent);
+        populateSelect('issueAgentSelect', currentAgent);
+      } catch (err) {
+        console.error("Failed to fetch agents list", err);
+      }
+    }
+
+    function authHeaders(extra) {
+      const h = { 'Content-Type': 'application/json', ...extra };
+      if (adminSecret) h['X-ADMIN-SECRET'] = adminSecret;
+      return h;
+    }
+
+    // Period Toggle
+    const periodBtns = document.getElementById('periodToggle').querySelectorAll('.toggle-btn');
+    periodBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        periodBtns.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        currentPeriod = btn.dataset.val;
+        
+        // Sync to card-level period filters
+        const faqPS = document.getElementById('faqPeriodSelect');
+        if (faqPS) faqPS.value = currentPeriod;
+        const issuePS = document.getElementById('issuePeriodSelect');
+        if (issuePS) issuePS.value = currentPeriod;
+
+        fetchDashboard();
+      });
+    });
+
+    // Timing Toggle
+    const timingBtns = document.getElementById('timingToggle').querySelectorAll('.toggle-btn');
+    timingBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        timingBtns.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        timingMode = btn.dataset.val;
+        updateTimingChart();
+      });
+    });
+
+    document.getElementById('agentSelect').addEventListener('change', (e) => {
+      currentAgent = e.target.value;
+
+      // Sync to card-level agent filters
+      const faqAS = document.getElementById('faqAgentSelect');
+      if (faqAS) faqAS.value = currentAgent;
+      const issueAS = document.getElementById('issueAgentSelect');
+      if (issueAS) issueAS.value = currentAgent;
+
+      fetchDashboard();
+    });
+
+    // Formatting helpers
+    function toggleSection(header) {
+      const content = header.nextElementSibling;
+      const isCollapsed = content.classList.contains('collapsed');
+
+      header.classList.toggle('collapsed', !isCollapsed);
+      content.classList.toggle('collapsed', !isCollapsed);
+    }
+
+    function formatDur(seconds) {
+      if (!seconds) return '0m 0s';
+      const m = Math.floor(seconds / 60);
+      const s = Math.floor(seconds % 60);
+      return `${m}m ${s}s`;
+    }
+
+    function initCharts() {
+      const volCtx = document.getElementById('volumeChart').getContext('2d');
+      volumeChartInst = new Chart(volCtx, {
+        type: 'bar',
+        data: { labels: [], datasets: [] },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: 'top',
+              align: 'end',
+              labels: {
+                usePointStyle: true,
+                pointStyle: 'circle',
+                boxWidth: 8,
+                padding: 20,
+                font: { family: 'Inter', size: 12, weight: 600 }
+              }
+            }
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              grid: { color: '#f1f5f9', drawBorder: false },
+              border: { display: false },
+              ticks: { font: { family: 'Inter', size: 11 }, color: '#94a3b8' }
+            },
+            x: {
+              grid: { display: false },
+              border: { display: false },
+              ticks: { font: { family: 'Inter', size: 11 }, color: '#94a3b8' }
+            }
+          },
+          interaction: { intersect: false, mode: 'index' }
+        }
+      });
+
+      const timeCtx = document.getElementById('timingChart').getContext('2d');
+      timingChartInst = new Chart(timeCtx, {
+        type: 'bar',
+        data: { labels: [], datasets: [] },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              backgroundColor: '#fff',
+              titleColor: '#1e293b',
+              bodyColor: '#64748b',
+              borderColor: '#e2e8f0',
+              borderWidth: 1,
+              padding: 12,
+              displayColors: false,
+              callbacks: {
+                label: (ctx) => `Volume : ${ctx.raw} calls`
+              }
+            }
+          },
+          scales: {
+            y: { display: false, beginAtZero: true },
+            x: {
+              grid: { display: false },
+              border: { display: false },
+              ticks: { font: { family: 'Inter', size: 10, weight: 600 }, color: '#94a3b8' }
+            }
+          }
+        }
+      });
+    }
+
+    function updateTimingChart() {
+      if (!lastDistributionData) return;
+      const isHourly = timingMode === 'hourly';
+      const items = isHourly ? lastDistributionData.hourly : lastDistributionData.intervals;
+
+      timingChartInst.data.labels = items.map(d => isHourly ? d.hour : d.label);
+      timingChartInst.data.datasets = [{
+        data: items.map(d => d.count),
+        backgroundColor: (ctx) => {
+          const val = ctx.raw;
+          const max = Math.max(...items.map(i => i.count));
+          const alpha = max > 0 ? 0.3 + (val / max) * 0.7 : 0.5;
+          return `rgba(16, 185, 129, ${alpha})`;
+        },
+        hoverBackgroundColor: '#10b981',
+        borderRadius: 6
+      }];
+      timingChartInst.update();
+    }
+
+    async function fetchConcurrency() {
+      try {
+        const res = await fetch('/api/v1/call-concurrency/today', { headers: authHeaders() });
+        if (!res.ok) return;
+        const data = await res.json();
+        const limit = data.limit ?? 10;
+        const current = data.effectiveConcurrency ?? data.currentConcurrency ?? 0;
+        const peak = data.maxConcurrencyToday ?? 0;
+        document.getElementById('linesInUse').innerText = `${current} / ${limit}`;
+        document.getElementById('peakToday').innerText = `${peak} / ${limit}`;
+        document.getElementById('peakTodayTime').innerText = data.maxConcurrencyAt
+          ? `at ${data.maxConcurrencyAt}`
+          : 'at —';
+      } catch (err) {
+        console.error('Failed to fetch concurrency stats', err);
+      }
+    }
+
+    async function fetchDashboard() {
+      if (!adminSecret) return;
+      fetchInsights();
+      fetchConcurrency();
+
+      try {
+        const res = await fetch(`/api/quality/dashboard?agent_id=${encodeURIComponent(currentAgent)}&period=${currentPeriod}`, { headers: authHeaders() });
+        const data = await res.json();
+
+        // Update Header
+        document.getElementById('headerTotal').innerText = data.summary.total_calls.toLocaleString();
+        document.getElementById('headerUnique').innerText = data.summary.unique_calls.toLocaleString();
+
+        // Update 6 Metrics Grid
+        document.getElementById('avgDuration').innerText = formatDur(data.summary.avg_duration);
+        document.getElementById('longestCall').innerText = formatDur(data.summary.longest_call);
+        lastLongestCallId = data.summary.longest_call_id;
+        document.getElementById('totalMinutes').innerText = Math.round(data.summary.total_minutes || 0).toLocaleString();
+
+        document.getElementById('appointments').innerText = (data.summary.appointments || 0).toLocaleString();
+        lastAppointmentCallIds = data.summary.appointment_call_ids || [];
+
+        // Update Volume Chart (Grouped Bars)
+        const labels = data.volume_chart.map(d => d.date);
+        volumeChartInst.data.labels = labels;
+        volumeChartInst.data.datasets = [
+          {
+            label: 'Total Calls',
+            data: data.volume_chart.map(d => d.total),
+            backgroundColor: '#10b981', // green
+            borderRadius: 6,
+            barThickness: 12,
+            categoryPercentage: 0.8,
+            barPercentage: 0.9
+          },
+          {
+            label: 'Unique Calls',
+            data: data.volume_chart.map(d => d.unique),
+            backgroundColor: '#14b8a6', // teal
+            borderRadius: 6,
+            barThickness: 12,
+            categoryPercentage: 0.8,
+            barPercentage: 0.9
+          }
+        ];
+        volumeChartInst.update();
+
+        // Update Timing Chart
+        lastDistributionData = data.distribution_chart;
+        updateTimingChart();
+
+        // Agent Select is now populated via fetchAgents() on load
+
+        renderAgentRatings(data.agent_ratings);
+
+        // Instant pre-fetch for appointments and longest call
+        let preloadIds = [];
+        if (lastLongestCallId) preloadIds.push(lastLongestCallId);
+        if (lastAppointmentCallIds.length) preloadIds = preloadIds.concat(lastAppointmentCallIds);
+        preloadBatch(preloadIds);
+      } catch (err) {
+        console.error("Failed to fetch dashboard data", err);
+      }
+    }
+
+    function generateCsvDownload(dataArray, filenamePrefix, selectElementId) {
+      if (!dataArray || dataArray.length === 0) {
+        alert("No data available to export.");
+        return;
+      }
+      
+      const headers = ["Rank", "Text", "Count"];
+      const rows = dataArray.map((item, idx) => [
+        idx + 1,
+        `"${(item.text || "").replace(/"/g, '""')}"`,
+        item.count || 0
+      ]);
+      
+      const csvContent = [headers.join(","), ...rows.map(r => r.join(","))].join("\n");
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.setAttribute("href", url);
+      
+      const agentSel = document.getElementById(selectElementId);
+      const agentLabel = agentSel ? agentSel.options[agentSel.selectedIndex].text.replace(/[^a-zA-Z0-9]/g, '_') : 'all';
+      link.setAttribute("download", `${filenamePrefix}_${agentLabel}.csv`);
+      
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+
+    function exportFaqsCsv(e) {
+      if (e) e.stopPropagation();
+      generateCsvDownload(window.currentFaqsData, 'top_questions', 'faqAgentSelect');
+    }
+
+    function exportIssuesCsv(e) {
+      if (e) e.stopPropagation();
+      generateCsvDownload(window.currentIssuesData, 'top_issues', 'issueAgentSelect');
+    }
+
+    async function fetchFaqInsights() {
+      if (!adminSecret) return;
+      
+      const currentFetchId = ++faqFetchId;
+      const agent = document.getElementById('faqAgentSelect')?.value || 'all';
+      const period = document.getElementById('faqPeriodSelect')?.value || 'month';
+      
+      document.getElementById('faqsSubtitle').innerText = 'FAQ generation from user inquiries';
+      document.getElementById('faqsList').innerHTML = '<div style="padding:16px;color:var(--text-muted);font-size:13px;">Analyzing transcripts...</div>';
+
+      const renderList = (arr, listId) => {
+        if (!arr || arr.length === 0) {
+          document.getElementById(listId).innerHTML = '<div style="padding:16px;color:var(--text-muted);font-size:13px;">No data available.</div>';
+          return;
+        }
+        
+        const maxCount = Math.max(...arr.map(a => a.count || 1));
+        let html = '';
+        arr.forEach((item, idx) => {
+          const num = (idx + 1).toString().padStart(2, '0');
+          const pct = Math.max(5, ((item.count || 0) / maxCount) * 100);
+          const callIdsJson = JSON.stringify(item.call_ids || []);
+          const escapedText = item.text.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+
+          html += `
+            <div class="list-row clickable" onclick="openIssueModal('${escapedText}', ${callIdsJson.replace(/"/g, '&quot;')})">
+              <div class="list-num">${num}</div>
+              <div style="flex:1">
+                <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                  <div class="list-text">${item.text}</div>
+                  <div class="list-count">${item.count || 0}</div>
+                </div>
+              </div>
+            </div>
+          `;
+        });
+        document.getElementById(listId).innerHTML = html;
+      };
+
+      try {
+        const res = await fetch(`/api/quality/insights?agent_id=${encodeURIComponent(agent)}&period=${period}`, { headers: authHeaders() });
+        if (!res.ok) throw new Error("Failed response");
+        const data = await res.json();
+
+        if (currentFetchId !== faqFetchId) return;
+
+        window.currentFaqsData = data.faqs;
+        renderList(data.faqs, 'faqsList');
+
+        let preloadIds = [];
+        (data.faqs || []).forEach(f => { if (f.call_ids) preloadIds = preloadIds.concat(f.call_ids); });
+        preloadBatch(preloadIds);
+
+        const totalRecords = data.total_records || 0;
+        if (totalRecords > 0) {
+          document.getElementById('faqsSubtitle').innerText = `FAQ generation from user inquiries · ${totalRecords.toLocaleString()} calls`;
+        }
+      } catch (e) {
+        console.error("Error fetching FAQ insights:", e);
+        if (currentFetchId !== faqFetchId) return;
+        document.getElementById('faqsList').innerHTML = 'Failed to load insights.';
+      }
+    }
+
+    async function fetchIssueInsights() {
+      if (!adminSecret) return;
+      
+      const currentFetchId = ++issueFetchId;
+      const agent = document.getElementById('issueAgentSelect')?.value || 'all';
+      const period = document.getElementById('issuePeriodSelect')?.value || 'month';
+      
+      document.getElementById('issuesSubtitle').innerText = 'Problems identified by human reviewers';
+      document.getElementById('issuesList').innerHTML = '<div style="padding:16px;color:var(--text-muted);font-size:13px;">Analyzing transcripts...</div>';
+
+      const renderList = (arr, listId) => {
+        if (!arr || arr.length === 0) {
+          document.getElementById(listId).innerHTML = '<div style="padding:16px;color:var(--text-muted);font-size:13px;">No data available.</div>';
+          return;
+        }
+        
+        const maxCount = Math.max(...arr.map(a => a.count || 1));
+        let html = '';
+        arr.forEach((item, idx) => {
+          const num = (idx + 1).toString().padStart(2, '0');
+          const pct = Math.max(5, ((item.count || 0) / maxCount) * 100);
+          const callIdsJson = JSON.stringify(item.call_ids || []);
+          const escapedText = item.text.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+
+          html += `
+            <div class="list-row clickable" onclick="openIssueModal('${escapedText}', ${callIdsJson.replace(/"/g, '&quot;')})">
+              <div class="list-num">${num}</div>
+              <div style="flex:1">
+                <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                  <div class="list-text">${item.text}</div>
+                  <div class="list-count">${item.count || 0}</div>
+                </div>
+                <div class="issue-bar-container">
+                  <div class="issue-bar-fill" style="width:${pct}%"></div>
+                </div>
+              </div>
+            </div>
+          `;
+        });
+        document.getElementById(listId).innerHTML = html;
+      };
+
+      try {
+        const res = await fetch(`/api/quality/insights?agent_id=${encodeURIComponent(agent)}&period=${period}`, { headers: authHeaders() });
+        if (!res.ok) throw new Error("Failed response");
+        const data = await res.json();
+
+        if (currentFetchId !== issueFetchId) return;
+
+        window.currentIssuesData = data.issues;
+        const reviewedRecords = data.reviewed_records || 0;
+        const totalRecords = data.total_records || 0;
+        document.getElementById('issuesSubtitle').innerText =
+          reviewedRecords > 0
+            ? `Based on ${reviewedRecords} human-reviewed call${reviewedRecords !== 1 ? 's' : ''} (of ${totalRecords.toLocaleString()} total)`
+            : `No reviewed calls yet — review calls to see issues`;
+
+        const issues = data.issues || [];
+        if (issues.length === 0 && reviewedRecords > 0) {
+          document.getElementById('issuesList').innerHTML =
+            '<div style="padding:16px;color:var(--text-muted);font-size:13px;">No problems flagged in the reviewed call(s).</div>';
+        } else {
+          renderList(issues, 'issuesList');
+        }
+
+        let preloadIds = [];
+        issues.forEach(i => { if (i.call_ids) preloadIds = preloadIds.concat(i.call_ids); });
+        preloadBatch(preloadIds);
+      } catch (e) {
+        console.error("Error fetching Issue insights:", e);
+        if (currentFetchId !== issueFetchId) return;
+        document.getElementById('issuesList').innerHTML = 'Failed to load insights.';
+      }
+    }
+
+    function fetchInsights() {
+      fetchFaqInsights();
+      fetchIssueInsights();
+    }
+
+    async function openIssueModal(title, callIds) {
+      const modal = document.getElementById('issueDetailsModal');
+      const body = document.getElementById('issueModalBody');
+      const titleEl = document.getElementById('issueModalTitle');
+
+      titleEl.innerText = title;
+      modal.classList.add('active');
+
+      if (!callIds || callIds.length === 0) {
+        body.innerHTML = '<div style="padding:40px; text-align:center; color:var(--text-muted);">No specific calls are currently linked to this AI insight.</div>';
+        return;
+      }
+
+      // ─── Instant Render from Cache ───
+      const allCached = callIds.every(id => callDetailsCache[id]);
+      if (allCached) {
+        renderModalCalls(callIds);
+        return;
+      }
+
+      // ─── Otherwise, Fetch & Update Cache ───
+      body.innerHTML = '<div style="padding:40px; text-align:center; color:var(--text-muted);">Fetching call details...</div>';
+
+      try {
+        await preloadBatch(callIds);
+        renderModalCalls(callIds);
+      } catch (err) {
+        body.innerHTML = '<div style="padding:40px; text-align:center; color:var(--red-text);">Error loading call details.</div>';
+      }
+    }
+
+    async function preloadBatch(callIds) {
+      if (!callIds || callIds.length === 0) return;
+
+      const missingIds = callIds.filter(id => !callDetailsCache[id]);
+      if (missingIds.length === 0) return;
+
+      try {
+        const res = await fetch(`/api/quality/calls/batch`, {
+          method: 'POST',
+          headers: authHeaders(),
+          body: JSON.stringify({ call_ids: missingIds })
+        });
+        const calls = await res.json();
+
+        if (calls) {
+          calls.forEach(c => {
+            callDetailsCache[c.call_id] = c;
+          });
+        }
+      } catch (err) {
+        console.error("Preload Error:", err);
+      }
+    }
+
+    function renderModalCalls(callIds) {
+      const body = document.getElementById('issueModalBody');
+      const calls = callIds.map(id => callDetailsCache[id]).filter(c => !!c);
+
+      if (calls.length === 0) {
+        body.innerHTML = '<div style="padding:40px; text-align:center; color:var(--text-muted);">Could not find details for the linked calls.</div>';
+        return;
+      }
+
+      body.innerHTML = calls.map(c => {
+        const rating = c.overall_rating || 0;
+        const stars = '★'.repeat(Math.round(rating)) + '☆'.repeat(5 - Math.round(rating));
+
+        const getAccClass = (v) => {
+          if (v === null || v === undefined) return 'muted';
+          return v >= 4 ? 'green' : v >= 3 ? 'yellow' : 'red';
+        };
+        const getAccLabel = (v) => {
+          if (v === null || v === undefined) return 'N/A';
+          return `${v}/5`;
+        };
+
+        return `
+        <div class="linked-call-card">
+          <div class="linked-call-header">
+            <div>
+              <div class="linked-call-id">Call ID: ${c.call_id}</div>
+              <div style="font-size:11px; color:var(--text-muted); margin-top:4px;">
+                 AI Agent: ${c.assistant_name || c.assistant_id}
+              </div>
+              <div style="display:flex; gap:8px; margin-top:12px; flex-wrap:wrap;">
+                <div class="accuracy-badge ${getAccClass(c.overall_rating)}">
+                  Agent Rating: ${getAccLabel(c.overall_rating)}
+                </div>
+                <div class="accuracy-badge ${getAccClass(c.numbers_correctness)}">
+                  Numbers/Date: ${getAccLabel(c.numbers_correctness)}
+                </div>
+              </div>
+            </div>
+            <div style="text-align:right">
+              <div style="color:#f59e0b; font-size:16px; margin-bottom:4px;">${stars}</div>
+              <div style="font-size:11px; font-weight:700; color:var(--text-muted); text-transform:uppercase;">${c.is_reviewed ? 'Reviewed' : 'Auto'}</div>
+            </div>
+          </div>
+
+          <div class="ai-summary-box">
+            <div class="ai-summary-label" style="display:flex; align-items:center; gap:4px; font-size:11px; font-weight:700; color:#1e40af; text-transform:uppercase; margin-bottom:8px;">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M12 16v-4"></path><path d="M12 8h.01"></path></svg>
+              AI Generated Summary
+            </div>
+            <div style="font-size:13px; color:#1e40af; line-height:1.5;">${c.summary_by_ai || 'No AI summary available.'}</div>
+          </div>
+
+          <div style="font-weight:600; font-size:10px; text-transform:uppercase; color:var(--text-muted); margin-bottom:4px; margin-top:12px;">
+            Reviewer Comment
+          </div>
+          <div class="linked-call-comment" style="font-size:13px; margin-bottom:16px;">${c.summary || 'No reviewer comment provided.'}</div>
+
+          <div class="agent-issues" style="display:flex; gap:8px; margin-bottom:16px;">
+            ${c.is_silent ? `<div class="issue-pill" style="font-size:11px; padding:4px 8px; background:#fef2f2; color:#991b1b; border-radius:4px;">🔇 Silent</div>` : ''}
+            ${c.hung_up ? `<div class="issue-pill" style="font-size:11px; padding:4px 8px; background:#fef2f2; color:#991b1b; border-radius:4px;">❌ Hung up</div>` : ''}
+            ${c.hallucinated ? `<div class="issue-pill" style="font-size:11px; padding:4px 8px; background:#fef2f2; color:#991b1b; border-radius:4px;">🧠 Hallucinated</div>` : ''}
+          </div>
+
+          <div class="transcript-container">
+            <div class="transcript-header" onclick="this.nextElementSibling.classList.toggle('collapsed')">
+              <span>View Full Transcript</span>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+            </div>
+            <div class="transcript-body collapsed">
+              ${formatTranscript(c.transcript)}
+            </div>
+          </div>
+        </div>
+        `;
+      }).join('');
+    }
+
+    function formatTranscript(text) {
+      if (!text) return 'No transcript available.';
+      const lines = text.split('\n');
+      return lines.map(line => {
+        if (line.startsWith('Assistant:')) {
+          return `<div class="transcript-line"><span class="role-assistant">AI:</span> ${line.replace('Assistant:', '').trim()}</div>`;
+        } else if (line.startsWith('User:')) {
+          return `<div class="transcript-line"><span class="role-user">Customer:</span> ${line.replace('User:', '').trim()}</div>`;
+        }
+        return `<div class="transcript-line">${line}</div>`;
+      }).join('');
+    }
+
+    function openAppointmentsModal() {
+      if (lastAppointmentCallIds.length === 0) {
+        alert("No booked appointments in this view.");
+        return;
+      }
+      openIssueModal("Booked Appointments", lastAppointmentCallIds);
+    }
+
+    function openLongestCallModal() {
+      if (!lastLongestCallId) {
+        alert("No call data available.");
+        return;
+      }
+      openIssueModal("Longest Call Details", [lastLongestCallId]);
+    }
+
+    function closeIssueModal() {
+      document.getElementById('issueDetailsModal').classList.remove('active');
+    }
+
+    function renderAgentRatings(agents) {
+      const grid = document.getElementById('ratingsGrid');
+      if (!agents || !agents.length) {
+        grid.innerHTML = '<div style="grid-column: 1/-1; padding:20px; color:var(--text-muted); text-align:center;">No ratings available</div>';
+        return;
+      }
+
+      grid.innerHTML = agents.map(a => {
+        const initials = a.agent_name.substring(0, 2).toUpperCase();
+
+        const renderBar = (label, val) => `
+          <div class="rating-bar-row">
+            <div class="rating-bar-label">${label}</div>
+            <div class="rating-bar-bg"><div class="rating-bar-fill" style="width: ${(val / 5) * 100}%"></div></div>
+            <div class="rating-bar-val">${val.toFixed(1)}</div>
+          </div>
+        `;
+
+        return `
+        <div class="agent-rating-card">
+          <div class="agent-header">
+            <div class="agent-avatar">${initials}</div>
+            <div>
+              <div class="agent-name">${a.agent_name}</div>
+              <div style="font-size:11px; color:var(--text-muted); margin-top:2px;">Total Calls: ${a.total_calls}</div>
+              <div class="agent-stars">
+                ${'★'.repeat(Math.round(a.overall))}
+                ${'☆'.repeat(5 - Math.round(a.overall))}
+                <span class="score">${a.overall.toFixed(1)}</span>
+              </div>
+            </div>
+          </div>
+          <div class="rating-bars">
+             ${renderBar('Overall experience', a.overall)}
+             ${renderBar('Name correctness', a.name)}
+             ${renderBar('Numbers / dates', a.numbers)}
+             ${renderBar('Address accuracy', a.address)}
+          </div>
+          <div class="agent-issues">
+            ${a.silent_count > 0 ? `<div class="issue-chip"><span>🔇</span> Silent ${a.silent_count}</div>` : ''}
+            ${a.hung_up_count > 0 ? `<div class="issue-chip"><span>❌</span> Hung up ${a.hung_up_count}</div>` : ''}
+            ${a.hallucinated_count > 0 ? `<div class="issue-chip"><span>🧠</span> Hallucinated ${a.hallucinated_count}</div>` : ''}
+          </div>
+        </div>
+        `;
+      }).join('');
+    }
+
+    // Modal Handlers
+    function openModal() {
+      document.getElementById('reportModal').classList.add('active');
+    }
+
+    function closeModal() {
+      document.getElementById('reportModal').classList.remove('active');
+    }
+
+    async function generateReport() {
+      const promptText = document.getElementById('reportPrompt').value;
+      const loader = document.getElementById('genLoader');
+      const text = document.getElementById('genText');
+      const btn = document.getElementById('btnGenerateReport');
+
+      loader.style.display = 'inline-block';
+      text.style.display = 'none';
+      btn.disabled = true;
+
+      try {
+        const res = await fetch('/api/quality/generate-report', {
+          method: 'POST',
+          headers: authHeaders(),
+          body: JSON.stringify({
+            agent_id: currentAgent,
+            period: currentPeriod,
+            prompt: promptText
+          })
+        });
+
+        if (!res.ok) {
+          const errText = await res.text();
+          throw new Error(`Server returned ${res.status}: ${errText}`);
+        }
+
+        const data = await res.json();
+        if (!data || !data.html) {
+          throw new Error('Server returned empty or invalid HTML.');
+        }
+
+        // Generate the PDF directly using html2pdf.js
+        const opt = {
+          margin: 0.5,
+          filename: `AI_Report_${currentPeriod}.pdf`,
+          image: { type: 'jpeg', quality: 0.98 },
+          html2canvas: { scale: 2, useCORS: true },
+          jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+        };
+
+        // Pass the raw HTML to html2pdf (parses it inside an invisible worker and exports the PDF!)
+        await html2pdf().set(opt).from(data.html).save();
+
+        closeModal();
+      } catch (e) {
+        console.error("Report gen error:", e);
+        // Send the error entirely to our python server so I can analyze it in the terminal!
+        fetch('/api/log-error', {
+          method: 'POST',
+          headers: authHeaders(),
+          body: JSON.stringify({ message: String(e.message), stack: String(e.stack) })
+        }).catch(() => {});
+
+        alert("Failed to generate report: " + e.message);
+      } finally {
+        loader.style.display = 'none';
+        text.style.display = 'inline';
+        btn.disabled = false;
+      }
+    }
+
+    // Startup
+    initCharts();
+    loadConfig();
+    if (adminSecret) {
+      fetchAgents();
+      fetchDashboard();
+    }
+    
+    document.getElementById('adminSecret').addEventListener('keydown', e => {
+      if (e.key === 'Enter') saveAuth();
+    });
+
+    setInterval(() => {
+      if (adminSecret) fetchConcurrency();
+    }, 30000);
+  </script>
+</body>
+
+</html>

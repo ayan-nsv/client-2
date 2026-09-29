@@ -1,0 +1,113 @@
+# =============================================================================
+# shared / core  (platform-wide — required for every deployment)
+# =============================================================================
+ENVIRONMENT
+
+POSTGRES_HOST
+POSTGRES_PORT
+POSTGRES_DB
+POSTGRES_USER
+POSTGRES_PASSWORD
+SQL_ECHO
+
+REDIS_URL
+
+CORS_ALLOWED_ORIGINS
+CORS_ALLOW_CREDENTIALS
+
+FIREBASE_PROJECT_ID
+FIREBASE_STORAGE_BUCKET
+
+STATIC_API_KEY
+SPECIAL_BYPASS_KEY
+ADMIN_SECRET
+
+# Shared AI key (market_planner, telephone_agent, knowledge, holdflight fallback)
+OPENAI_API_KEY
+
+# Shared SendGrid (core + telephone_agent + knowledge)
+SENDGRID_API_KEY
+SENDGRID_FROM_EMAIL
+SENDGRID_USER_STATUS_EMAIL_TEMPLATE_ID
+
+
+# =============================================================================
+# market_planner
+# =============================================================================
+GEMINI_API_KEY
+
+FB_APP_ID
+FB_APP_SECRET
+FB_REDIRECT_URI
+
+INSTAGRAM_APP_ID
+INSTAGRAM_APP_SECRET
+INSTAGRAM_REDIRECT_URI
+
+LINKEDIN_CLIENT_ID
+LINKEDIN_CLIENT_SECRET
+LINKEDIN_REDIRECT_URI
+
+TIKTOK_CLIENT_KEY
+TIKTOK_CLIENT_SECRET
+TIKTOK_REDIRECT_URI
+
+TWILIO_ACCOUNT_SID
+TWILIO_AUTH_TOKEN
+TWILIO_WHATSAPP_FROM
+
+# Planned / unused in code today
+NANO_API_KEY
+SEEDANCE_API_KEY
+VERIFY_TOKEN
+
+
+# =============================================================================
+# knowledge / rag
+# =============================================================================
+AWS_ACCESS_KEY_ID
+AWS_SECRET_ACCESS_KEY
+AWS_SESSION_TOKEN
+S3_BUCKET_NAME
+S3_REGION
+S3_BASE_URL
+
+
+# =============================================================================
+# holdflight / scraper
+# =============================================================================
+HOLDFLIGHT_OPENAI_API_KEY
+GOOGLE_FONTS_API_KEY
+
+# Legacy scraper aliases (not referenced — holdflight uses FIREBASE_STORAGE_BUCKET / OPENAI_API_KEY)
+OPENAI_API_KEY_scarper
+FIREBASE_BUCKET_NAME
+FIREBASE_IMAGES_FOLDER
+
+
+# =============================================================================
+# telephone_agent
+# =============================================================================
+ENCRYPTION_KEY
+
+SENDGRID_POST_CALL_TEMPLATE_ID
+SENDGRID_DAILY_SUMMARY_TEMPLATE_ID
+SENDGRID_STATUS_EMAIL_TEMPLATE_ID
+
+# Unused in code today
+SMTP_HOST
+SMTP_PORT
+SMTP_USER
+SMTP_PASS
+TARGET_API_BASE_URL
+SENDGRID_NOTIFICATION_TEMPLATE_ID
+
+
+# =============================================================================
+# install filter (compose / first migration)
+# =============================================================================
+# Which products to install on a FIRST migration run (comma-separated).
+# Read only when core.installed_products is empty; after that the table is the
+# single source of truth and this is ignored. Unset behaves as "install everything".
+# Add a product later with: python3 migrate.py --install <product>
+INSTALL_PRODUCTS #core,market_planner,knowledge,telephone_agent

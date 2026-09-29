@@ -1,0 +1,9 @@
+Client source tree (subset).
+Products: core, knowledge, market_planner
+
+Build & deploy:
+  docker compose build
+  docker compose --profile all up -d
+
+Do not bind-mount a full monorepo over /app or unpaid code will reappear.
+First install uses products present on disk (see product_catalog / migrate.py).

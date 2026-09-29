@@ -1,0 +1,1420 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Category & Prompt Admin</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --primary: #6366f1;
+      --primary-dark: #4f46e5;
+      --primary-light: #eef2ff;
+      --success: #10b981;
+      --success-dark: #059669;
+      --success-light: #d1fae5;
+      --warning: #f59e0b;
+      --warning-light: #fef3c7;
+      --danger: #ef4444;
+      --danger-dark: #dc2626;
+      --danger-light: #fee2e2;
+      --gray-50: #f8fafc;
+      --gray-100: #f1f5f9;
+      --gray-200: #e2e8f0;
+      --gray-300: #cbd5e1;
+      --gray-400: #94a3b8;
+      --gray-500: #64748b;
+      --gray-600: #475569;
+      --gray-700: #334155;
+      --gray-800: #1e293b;
+      --gray-900: #0f172a;
+      --radius: 12px;
+      --radius-sm: 8px;
+      --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.05);
+      --shadow: 0 4px 6px -1px rgba(15, 23, 42, 0.08), 0 2px 4px -2px rgba(15, 23, 42, 0.05);
+      --shadow-lg: 0 10px 15px -3px rgba(15, 23, 42, 0.1), 0 4px 6px -4px rgba(15, 23, 42, 0.05);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--gray-50);
+      color: var(--gray-800);
+      line-height: 1.5;
+      min-height: 100vh;
+    }
+
+    /* ─── Header ───────────────────────────────────────── */
+    header {
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+      color: white;
+      padding: 24px 40px;
+      box-shadow: var(--shadow);
+    }
+
+    .header-inner {
+      max-width: 1400px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .header-title h1 {
+      font-size: 22px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+
+    .header-title p {
+      font-size: 13px;
+      opacity: 0.85;
+      margin-top: 2px;
+    }
+
+    .auth-controls {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .auth-controls input {
+      background: rgba(255, 255, 255, 0.15);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      color: white;
+      padding: 9px 12px;
+      border-radius: var(--radius-sm);
+      font-size: 13px;
+      font-family: inherit;
+      min-width: 260px;
+    }
+
+    .auth-controls input::placeholder {
+      color: rgba(255, 255, 255, 0.7);
+    }
+
+    .auth-controls input:focus {
+      outline: none;
+      background: rgba(255, 255, 255, 0.25);
+      border-color: rgba(255, 255, 255, 0.6);
+    }
+
+    /* ─── Layout ───────────────────────────────────────── */
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 28px 40px 80px;
+    }
+
+    .tabs {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 24px;
+      background: white;
+      padding: 6px;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-sm);
+      width: fit-content;
+    }
+
+    .tab {
+      padding: 10px 20px;
+      font-weight: 500;
+      font-size: 14px;
+      color: var(--gray-500);
+      border: none;
+      background: transparent;
+      cursor: pointer;
+      border-radius: var(--radius-sm);
+      transition: all 0.15s;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .tab:hover { background: var(--gray-100); color: var(--gray-700); }
+
+    .tab.active {
+      background: var(--primary);
+      color: white;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .tab-count {
+      background: rgba(255,255,255,0.25);
+      padding: 1px 8px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+
+    .tab:not(.active) .tab-count {
+      background: var(--gray-200);
+      color: var(--gray-600);
+    }
+
+    /* ─── Toolbar ───────────────────────────────────────── */
+    .toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .toolbar-left { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+    .toolbar-right { display: flex; gap: 10px; }
+
+    input.field, select.field, textarea.field {
+      padding: 9px 12px;
+      border: 1px solid var(--gray-200);
+      border-radius: var(--radius-sm);
+      font-size: 14px;
+      background: white;
+      font-family: inherit;
+      color: var(--gray-800);
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+
+    input.field:focus, select.field:focus, textarea.field:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px var(--primary-light);
+    }
+
+    input.field { min-width: 260px; }
+
+    /* ─── Buttons ───────────────────────────────────────── */
+    .btn {
+      padding: 9px 16px;
+      border-radius: var(--radius-sm);
+      border: none;
+      font-size: 14px;
+      font-weight: 500;
+      font-family: inherit;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.15s;
+      white-space: nowrap;
+    }
+
+    .btn-primary { background: var(--primary); color: white; }
+    .btn-primary:hover { background: var(--primary-dark); }
+
+    .btn-success { background: var(--success); color: white; }
+    .btn-success:hover { background: var(--success-dark); }
+
+    .btn-danger { background: var(--danger); color: white; }
+    .btn-danger:hover { background: var(--danger-dark); }
+
+    .btn-ghost {
+      background: white;
+      color: var(--gray-700);
+      border: 1px solid var(--gray-200);
+    }
+    .btn-ghost:hover { background: var(--gray-50); border-color: var(--gray-300); }
+
+    .btn-sm { padding: 6px 12px; font-size: 12.5px; }
+
+    .btn:disabled { opacity: 0.55; cursor: not-allowed; }
+
+    /* ─── Cards / Grid ───────────────────────────────── */
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 18px;
+    }
+
+    .card {
+      background: white;
+      border: 1px solid var(--gray-200);
+      border-radius: var(--radius);
+      padding: 20px;
+      box-shadow: var(--shadow-sm);
+      transition: box-shadow 0.15s, transform 0.15s;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .card:hover { box-shadow: var(--shadow); }
+
+    .card-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 10px;
+    }
+
+    .card-title {
+      font-size: 17px;
+      font-weight: 600;
+      color: var(--gray-900);
+      line-height: 1.3;
+    }
+
+    .card-desc {
+      font-size: 13px;
+      color: var(--gray-500);
+      line-height: 1.5;
+      min-height: 18px;
+    }
+
+    /* ─── Badges ───────────────────────────────────────── */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 3px 10px;
+      border-radius: 999px;
+      font-size: 11.5px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+    .badge-success { background: var(--success-light); color: var(--success-dark); }
+    .badge-warning { background: var(--warning-light); color: #92400e; }
+    .badge-neutral { background: var(--gray-100); color: var(--gray-600); }
+    .badge-info    { background: var(--primary-light); color: var(--primary-dark); }
+
+    .badge-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: currentColor;
+    }
+
+    .card-stats {
+      display: flex;
+      gap: 14px;
+      font-size: 12.5px;
+      color: var(--gray-500);
+      padding-top: 4px;
+    }
+
+    .card-stats b { color: var(--gray-800); font-weight: 600; }
+
+    .card-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      padding-top: 10px;
+      border-top: 1px solid var(--gray-100);
+    }
+
+    /* ─── Table ──────────────────────────────────────── */
+    .table-wrap {
+      background: white;
+      border: 1px solid var(--gray-200);
+      border-radius: var(--radius);
+      overflow: hidden;
+      box-shadow: var(--shadow-sm);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    th, td {
+      padding: 14px 18px;
+      text-align: left;
+      font-size: 13.5px;
+      border-bottom: 1px solid var(--gray-100);
+    }
+
+    th {
+      background: var(--gray-50);
+      color: var(--gray-500);
+      font-weight: 600;
+      text-transform: uppercase;
+      font-size: 11.5px;
+      letter-spacing: 0.03em;
+      border-bottom: 1px solid var(--gray-200);
+    }
+
+    tbody tr { transition: background 0.1s; }
+    tbody tr:hover { background: var(--gray-50); }
+    tbody tr:last-child td { border-bottom: none; }
+
+    .row-actions { display: flex; gap: 6px; justify-content: flex-end; }
+
+    .prompt-snippet {
+      font-family: 'SF Mono', 'Menlo', 'Monaco', 'Courier New', monospace;
+      font-size: 12px;
+      color: var(--gray-500);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 260px;
+      display: block;
+    }
+
+    /* ─── Modal ─────────────────────────────────────── */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.55);
+      backdrop-filter: blur(4px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 50;
+      padding: 20px;
+      animation: fadeIn 0.15s ease-out;
+    }
+
+    .modal-backdrop.show { display: flex; }
+
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .modal {
+      background: white;
+      border-radius: var(--radius);
+      width: 100%;
+      max-width: 720px;
+      max-height: 92vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      box-shadow: var(--shadow-lg);
+      animation: slideUp 0.2s ease-out;
+    }
+
+    .modal.modal-xl { max-width: 940px; }
+
+    .modal-header {
+      padding: 20px 24px;
+      border-bottom: 1px solid var(--gray-200);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .modal-header h2 { font-size: 18px; font-weight: 600; color: var(--gray-900); }
+    .modal-close {
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      font-size: 22px;
+      color: var(--gray-400);
+      line-height: 1;
+      padding: 4px;
+    }
+    .modal-close:hover { color: var(--gray-700); }
+
+    .modal-body { padding: 22px 24px; overflow-y: auto; flex: 1; }
+
+    .modal-footer {
+      padding: 14px 24px;
+      border-top: 1px solid var(--gray-200);
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      background: var(--gray-50);
+    }
+
+    /* ─── Forms ─────────────────────────────────────── */
+    .form-row { margin-bottom: 16px; }
+    .form-row-split {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      margin-bottom: 16px;
+    }
+    .form-row-split.triple { grid-template-columns: 1.2fr 1fr 0.8fr; }
+
+    label.lbl {
+      display: block;
+      font-size: 12.5px;
+      font-weight: 500;
+      color: var(--gray-600);
+      margin-bottom: 6px;
+    }
+
+    .field-full { width: 100%; }
+
+    textarea.field {
+      min-height: 260px;
+      font-family: 'SF Mono', 'Menlo', 'Monaco', 'Courier New', monospace;
+      font-size: 13px;
+      line-height: 1.55;
+      resize: vertical;
+    }
+
+    .help {
+      font-size: 12px;
+      color: var(--gray-500);
+      margin-top: 6px;
+      line-height: 1.45;
+    }
+
+    .help code {
+      background: var(--gray-100);
+      padding: 1px 5px;
+      border-radius: 3px;
+      font-size: 11.5px;
+    }
+
+    .checkbox-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 14px;
+      background: var(--gray-50);
+      border: 1px solid var(--gray-200);
+      border-radius: var(--radius-sm);
+    }
+
+    .checkbox-row input[type="checkbox"] {
+      width: 16px;
+      height: 16px;
+      accent-color: var(--primary);
+    }
+
+    .checkbox-row label {
+      font-size: 13px;
+      color: var(--gray-700);
+      font-weight: 500;
+      cursor: pointer;
+    }
+
+    /* ─── Tool picker ───────────────────────────────── */
+    .tools-picker {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+      gap: 8px;
+      max-height: 220px;
+      overflow-y: auto;
+      padding: 10px;
+      border: 1px solid var(--gray-200);
+      border-radius: var(--radius-sm);
+      background: var(--gray-50);
+    }
+
+    .tool-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 10px;
+      background: white;
+      border: 1px solid var(--gray-200);
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      transition: border-color 0.12s, background 0.12s;
+      user-select: none;
+    }
+
+    .tool-item:hover { border-color: var(--primary); background: var(--primary-light); }
+
+    .tool-item input { accent-color: var(--primary); cursor: pointer; }
+
+    .tool-item.selected { border-color: var(--primary); background: var(--primary-light); }
+
+    .tool-item-body { flex: 1; min-width: 0; }
+
+    .tool-name {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--gray-800);
+      display: block;
+    }
+
+    .tool-id {
+      font-family: 'SF Mono', 'Menlo', 'Monaco', monospace;
+      font-size: 10.5px;
+      color: var(--gray-500);
+      display: block;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .tools-picker-toolbar {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 8px;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .tool-count-pill {
+      background: var(--primary-light);
+      color: var(--primary-dark);
+      padding: 3px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 500;
+    }
+
+    .tool-link-btn {
+      background: none;
+      border: none;
+      color: var(--primary);
+      font-size: 12px;
+      cursor: pointer;
+      padding: 2px 6px;
+      font-family: inherit;
+    }
+
+    .tool-link-btn:hover { text-decoration: underline; }
+
+    /* ─── Empty / Loading ───────────────────────────── */
+    .empty {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--gray-500);
+      background: white;
+      border: 1px dashed var(--gray-300);
+      border-radius: var(--radius);
+    }
+
+    .empty-icon {
+      font-size: 44px;
+      margin-bottom: 14px;
+      opacity: 0.45;
+    }
+
+    .empty h3 { color: var(--gray-700); margin-bottom: 6px; font-size: 16px; }
+
+    .loader {
+      text-align: center;
+      padding: 40px;
+      color: var(--gray-500);
+    }
+
+    .spinner {
+      width: 24px; height: 24px;
+      border: 3px solid var(--gray-200);
+      border-top-color: var(--primary);
+      border-radius: 50%;
+      margin: 0 auto 10px;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ─── Toast ─────────────────────────────────────── */
+    .toast-container {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      z-index: 100;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .toast {
+      background: white;
+      border-radius: var(--radius-sm);
+      padding: 12px 16px;
+      box-shadow: var(--shadow-lg);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      border-left: 4px solid var(--primary);
+      min-width: 280px;
+      max-width: 380px;
+      animation: slideInRight 0.2s ease-out;
+      font-size: 13.5px;
+    }
+
+    @keyframes slideInRight {
+      from { transform: translateX(110%); }
+      to { transform: translateX(0); }
+    }
+
+    .toast.success { border-left-color: var(--success); }
+    .toast.error { border-left-color: var(--danger); }
+    .toast.warn { border-left-color: var(--warning); }
+
+    /* ─── Utility ───────────────────────────────────── */
+    .hidden { display: none !important; }
+
+    .mono {
+      font-family: 'SF Mono', 'Menlo', 'Monaco', 'Courier New', monospace;
+      font-size: 12px;
+    }
+
+    .chip {
+      display: inline-block;
+      padding: 2px 8px;
+      background: var(--gray-100);
+      border-radius: 4px;
+      font-size: 11.5px;
+      color: var(--gray-600);
+      margin-right: 4px;
+    }
+
+    .section-hdr {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 14px;
+    }
+
+    .section-hdr h2 {
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--gray-900);
+    }
+
+    .filter-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 10px;
+      background: var(--primary-light);
+      color: var(--primary-dark);
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 500;
+    }
+  </style>
+</head>
+
+<body>
+
+<!-- Header -->
+<header>
+  <div class="header-inner">
+    <div class="header-title">
+      <h1>Category & Prompt Template Admin</h1>
+      <p>Manage industries, multi-language prompts, versions, and publish state</p>
+    </div>
+    <div class="auth-controls">
+      <label for="auth-key" style="font-size: 0.85rem; color: var(--text-dim); white-space: nowrap;">Admin Secret</label>
+      <input id="auth-key" type="password" placeholder="ADMIN_SECRET (X-ADMIN-SECRET)" />
+      <button class="btn btn-ghost btn-sm" onclick="saveAuth()">Save</button>
+    </div>
+  </div>
+</header>
+
+<div class="container">
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <button class="tab active" data-tab="categories" onclick="switchTab('categories')">
+      Categories
+      <span class="tab-count" id="count-categories">0</span>
+    </button>
+    <button class="tab" data-tab="prompts" onclick="switchTab('prompts')">
+      Prompt Templates
+      <span class="tab-count" id="count-prompts">0</span>
+    </button>
+  </div>
+
+  <!-- Categories tab -->
+  <section id="tab-categories">
+    <div class="toolbar">
+      <div class="toolbar-left">
+        <input class="field" id="cat-search" type="text" placeholder="Search categories by name…" oninput="debouncedLoadCategories()" />
+        <select class="field" id="cat-filter" onchange="loadCategories()">
+          <option value="all">All</option>
+          <option value="published">Published only</option>
+          <option value="draft">Drafts only</option>
+        </select>
+      </div>
+      <div class="toolbar-right">
+        <button class="btn btn-primary" onclick="openCategoryModal()">+ New Category</button>
+      </div>
+    </div>
+
+    <div id="cat-list"></div>
+  </section>
+
+  <!-- Prompts tab -->
+  <section id="tab-prompts" class="hidden">
+    <div class="toolbar">
+      <div class="toolbar-left">
+        <select class="field" id="pt-filter-category" onchange="loadPrompts()">
+          <option value="">All categories</option>
+        </select>
+        <select class="field" id="pt-filter-type" onchange="loadPrompts()">
+          <option value="">All agent types</option>
+          <option value="customer_support">Customer Support</option>
+          <option value="appointment_booking">Appointment Booking</option>
+        </select>
+        <select class="field" id="pt-filter-lang" onchange="loadPrompts()">
+          <option value="">All languages</option>
+          <option value="english">English</option>
+          <option value="swedish">Swedish</option>
+        </select>
+        <select class="field" id="pt-filter-pub" onchange="loadPrompts()">
+          <option value="all">All states</option>
+          <option value="published">Published only</option>
+          <option value="draft">Drafts only</option>
+        </select>
+      </div>
+      <div class="toolbar-right">
+        <button class="btn btn-primary" onclick="openPromptModal()">+ New Prompt</button>
+      </div>
+    </div>
+
+    <div id="pt-list"></div>
+  </section>
+</div>
+
+<!-- ═════════ Category Modal ═════════ -->
+<div class="modal-backdrop" id="cat-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="cat-modal-title">New Category</h2>
+      <button class="modal-close" onclick="closeModal('cat-modal')">&times;</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="cat-id" />
+      <div class="form-row">
+        <label class="lbl">Name <span style="color: var(--danger);">*</span></label>
+        <input class="field field-full" id="cat-name" type="text" placeholder="e.g. Plumbing, Hair Salon, Dental Clinic" />
+        <div class="help">Must be unique. Users will see this name in the category selector.</div>
+      </div>
+      <div class="form-row">
+        <label class="lbl">Description</label>
+        <textarea class="field field-full" id="cat-description" style="min-height: 80px; font-family: inherit; font-size: 14px;" placeholder="Short, admin-facing description (optional)"></textarea>
+      </div>
+      <div class="form-row">
+        <div class="checkbox-row">
+          <input type="checkbox" id="cat-published" />
+          <label for="cat-published">Publish immediately (requires at least one published prompt)</label>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('cat-modal')">Cancel</button>
+      <button class="btn btn-primary" id="cat-save-btn" onclick="saveCategory()">Save Category</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═════════ Prompt Modal ═════════ -->
+<div class="modal-backdrop" id="pt-modal">
+  <div class="modal modal-xl">
+    <div class="modal-header">
+      <h2 id="pt-modal-title">New Prompt Template</h2>
+      <button class="modal-close" onclick="closeModal('pt-modal')">&times;</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="pt-id" />
+      <div class="form-row-split triple">
+        <div>
+          <label class="lbl">Category <span style="color: var(--danger);">*</span></label>
+          <select class="field field-full" id="pt-category"></select>
+        </div>
+        <div>
+          <label class="lbl">Agent Type <span style="color: var(--danger);">*</span></label>
+          <select class="field field-full" id="pt-type">
+            <option value="customer_support">Customer Support</option>
+            <option value="appointment_booking">Appointment Booking</option>
+          </select>
+        </div>
+        <div>
+          <label class="lbl">Version <span style="color: var(--danger);">*</span></label>
+          <input class="field field-full" id="pt-version" type="text" placeholder="v1" value="v1" />
+        </div>
+      </div>
+
+      <div class="form-row-split">
+        <div>
+          <label class="lbl">Language <span style="color: var(--danger);">*</span></label>
+          <select class="field field-full" id="pt-lang">
+            <option value="english">English</option>
+            <option value="swedish">Swedish</option>
+          </select>
+        </div>
+        <div>
+          <label class="lbl">Publish state</label>
+          <div class="checkbox-row" style="margin-top: 0;">
+            <input type="checkbox" id="pt-published" />
+            <label for="pt-published">Published</label>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <label class="lbl">Prompt Template <span style="color: var(--danger);">*</span></label>
+        <textarea class="field field-full" id="pt-prompt" placeholder="Full prompt with template placeholders…"></textarea>
+        <div class="help">
+          Supported placeholders:
+          <code>{{agent_name}}</code>
+          <code>{{company_name}}</code>
+          <code>{{description}}</code>
+          <code>{{company_id}}</code>
+          <code>{{services_block}}</code>
+          <code>{{areas_of_operation_block}}</code>
+          <code>{{knowledge_base_block}}</code>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="tools-picker-toolbar">
+          <label class="lbl" style="margin: 0;">
+            Tools
+            <span class="tool-count-pill" id="pt-tool-count">0 selected</span>
+          </label>
+          <div>
+            <button type="button" class="tool-link-btn" onclick="toolsSelectAll(true)">Select all</button>
+            <button type="button" class="tool-link-btn" onclick="toolsSelectAll(false)">Clear</button>
+          </div>
+        </div>
+        <div class="tools-picker" id="pt-tools"></div>
+        <div class="help">
+          These tool IDs are attached to the Vapi assistant (<code>toolIds[]</code>) whenever an agent
+          is created or updated with a category that resolves to this template. The knowledge-base tool
+          and transfer tool are added on top automatically at runtime.
+        </div>
+      </div>
+
+      <div class="form-row">
+        <label class="lbl">Internal Notes</label>
+        <textarea class="field field-full" id="pt-notes" style="min-height: 60px; font-family: inherit; font-size: 13.5px;" placeholder="Changelog for this version (admin-only, optional)"></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('pt-modal')">Cancel</button>
+      <button class="btn btn-primary" id="pt-save-btn" onclick="savePrompt()">Save Prompt</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast-container" id="toasts"></div>
+
+<script>
+  // ─── Config ─────────────────────────────────────────
+  const API_BASE = '/api/v1';
+  const ADMIN_SECRET = '';
+
+  const state = {
+    categories: [],
+    prompts: [],
+    tools: [],           // TOOL_CONFIG entries {tool_id, name}
+    toolsById: {},       // tool_id → {tool_id, name}
+    activeTab: 'categories',
+  };
+
+  // ─── Auth ───────────────────────────────────────────
+  function loadAuth() {
+    const saved = localStorage.getItem('cat_admin_auth') || ADMIN_SECRET;
+    document.getElementById('auth-key').value = saved;
+  }
+
+  function saveAuth() {
+    const val = document.getElementById('auth-key').value.trim();
+    localStorage.setItem('cat_admin_auth', val);
+    toast('Admin secret saved', 'success');
+    refreshAll();
+  }
+
+  function authHeaders() {
+    const key = (document.getElementById('auth-key').value || '').trim();
+    if (!key) return {};
+    return { 'X-ADMIN-SECRET': key };
+  }
+
+  async function api(path, opts = {}) {
+    const headers = {
+      'Content-Type': 'application/json',
+      ...authHeaders(),
+      ...(opts.headers || {}),
+    };
+    const res = await fetch(`${API_BASE}${path}`, { ...opts, headers });
+    const text = await res.text();
+    let data = null;
+    try { data = text ? JSON.parse(text) : null; } catch (_) { data = { raw: text }; }
+    if (!res.ok) {
+      const msg = (data && (data.detail || data.message || data.error)) || `HTTP ${res.status}`;
+      throw new Error(typeof msg === 'string' ? msg : JSON.stringify(msg));
+    }
+    return data;
+  }
+
+  // ─── Toast ──────────────────────────────────────────
+  function toast(msg, type = 'info') {
+    const c = document.getElementById('toasts');
+    const el = document.createElement('div');
+    el.className = `toast ${type}`;
+    el.textContent = msg;
+    c.appendChild(el);
+    setTimeout(() => { el.style.opacity = '0'; el.style.transition = 'opacity 0.2s'; }, 2800);
+    setTimeout(() => el.remove(), 3100);
+  }
+
+  // ─── Tabs ──────────────────────────────────────────
+  function switchTab(tab) {
+    state.activeTab = tab;
+    document.querySelectorAll('.tab').forEach(t => {
+      t.classList.toggle('active', t.dataset.tab === tab);
+    });
+    document.getElementById('tab-categories').classList.toggle('hidden', tab !== 'categories');
+    document.getElementById('tab-prompts').classList.toggle('hidden', tab !== 'prompts');
+    if (tab === 'prompts') loadPrompts();
+    else loadCategories();
+  }
+
+  // ─── Categories ─────────────────────────────────────
+  const debouncedLoadCategories = debounce(loadCategories, 300);
+
+  function debounce(fn, ms) {
+    let t;
+    return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), ms); };
+  }
+
+  async function loadCategories() {
+    const holder = document.getElementById('cat-list');
+    holder.innerHTML = `<div class="loader"><div class="spinner"></div>Loading categories…</div>`;
+
+    const search = document.getElementById('cat-search').value.trim();
+    const filter = document.getElementById('cat-filter').value;
+
+    try {
+      const qs = new URLSearchParams();
+      if (search) qs.set('search', search);
+      const data = await api(`/admin/categories${qs.toString() ? '?' + qs : ''}`);
+      let list = data.data || [];
+      if (filter === 'published') list = list.filter(c => c.is_published);
+      if (filter === 'draft') list = list.filter(c => !c.is_published);
+      state.categories = data.data || [];
+      document.getElementById('count-categories').textContent = state.categories.length;
+      renderCategories(list);
+      populatePromptCategoryFilter();
+    } catch (e) {
+      holder.innerHTML = `<div class="empty"><div class="empty-icon">!</div><h3>Couldn't load categories</h3><p>${escapeHtml(e.message)}</p></div>`;
+    }
+  }
+
+  function renderCategories(list) {
+    const holder = document.getElementById('cat-list');
+    if (!list.length) {
+      holder.innerHTML = `
+        <div class="empty">
+          <div class="empty-icon">&#128193;</div>
+          <h3>No categories yet</h3>
+          <p>Create a category to start grouping prompt templates by industry.</p>
+          <button class="btn btn-primary" style="margin-top: 14px;" onclick="openCategoryModal()">+ Create First Category</button>
+        </div>`;
+      return;
+    }
+
+    const cards = list.map(c => {
+      const needsPublish = !c.is_published && c.published_prompts_count > 0;
+      const hint = needsPublish
+        ? `<div style="font-size: 12px; color: #92400e; background: var(--warning-light); padding: 8px 10px; border-radius: 6px; margin-top: 4px;">
+             <b>Heads up:</b> this category has published prompts but is still a draft. Publish it so end-users can see it in the selector.
+           </div>`
+        : '';
+      return `
+      <div class="card">
+        <div class="card-head">
+          <div>
+            <div class="card-title">${escapeHtml(c.name)}</div>
+            <div class="card-desc">${escapeHtml(c.description || 'No description')}</div>
+          </div>
+          <span class="badge ${c.is_published ? 'badge-success' : 'badge-warning'}">
+            <span class="badge-dot"></span>${c.is_published ? 'Published' : 'Draft'}
+          </span>
+        </div>
+        ${hint}
+        <div class="card-stats">
+          <span><b>${c.prompts_count}</b> prompts</span>
+          <span><b>${c.published_prompts_count}</b> published</span>
+          <span>ID <b>${c.id}</b></span>
+        </div>
+        <div class="card-actions">
+          <button class="btn btn-ghost btn-sm" onclick="openCategoryModal(${c.id})">Edit</button>
+          <button class="btn ${c.is_published ? 'btn-ghost' : 'btn-success'} btn-sm" onclick="toggleCategoryPublish(${c.id}, ${!c.is_published})">
+            ${c.is_published ? 'Unpublish' : 'Publish'}
+          </button>
+          <button class="btn btn-ghost btn-sm" onclick="viewCategoryPrompts(${c.id})">View Prompts</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteCategory(${c.id}, '${escapeHtml(c.name).replace(/'/g, "\\'")}')">Delete</button>
+        </div>
+      </div>
+    `;
+    }).join('');
+    holder.innerHTML = `<div class="grid">${cards}</div>`;
+  }
+
+  function openCategoryModal(id = null) {
+    document.getElementById('cat-id').value = id || '';
+    document.getElementById('cat-modal-title').textContent = id ? 'Edit Category' : 'New Category';
+    if (id) {
+      const c = state.categories.find(x => x.id === id);
+      if (c) {
+        document.getElementById('cat-name').value = c.name;
+        document.getElementById('cat-description').value = c.description || '';
+        document.getElementById('cat-published').checked = c.is_published;
+      }
+    } else {
+      document.getElementById('cat-name').value = '';
+      document.getElementById('cat-description').value = '';
+      document.getElementById('cat-published').checked = false;
+    }
+    showModal('cat-modal');
+  }
+
+  async function saveCategory() {
+    const id = document.getElementById('cat-id').value;
+    const payload = {
+      name: document.getElementById('cat-name').value.trim(),
+      description: document.getElementById('cat-description').value.trim() || null,
+      is_published: document.getElementById('cat-published').checked,
+    };
+    if (!payload.name) { toast('Name is required', 'error'); return; }
+
+    const btn = document.getElementById('cat-save-btn');
+    btn.disabled = true; btn.textContent = 'Saving…';
+    try {
+      if (id) {
+        await api(`/admin/categories/${id}`, { method: 'PATCH', body: JSON.stringify(payload) });
+        toast('Category updated', 'success');
+      } else {
+        await api(`/admin/categories`, { method: 'POST', body: JSON.stringify(payload) });
+        toast('Category created', 'success');
+      }
+      closeModal('cat-modal');
+      loadCategories();
+    } catch (e) {
+      toast(e.message, 'error');
+    } finally {
+      btn.disabled = false; btn.textContent = 'Save Category';
+    }
+  }
+
+  async function toggleCategoryPublish(id, newState) {
+    try {
+      await api(`/admin/categories/${id}/publish`, {
+        method: 'POST',
+        body: JSON.stringify({ is_published: newState }),
+      });
+      toast(newState ? 'Category published' : 'Category unpublished', 'success');
+      loadCategories();
+    } catch (e) {
+      toast(e.message, 'error');
+    }
+  }
+
+  async function deleteCategory(id, name) {
+    if (!confirm(`Delete category "${name}"?\nAll associated prompts will be deleted (cascade).`)) return;
+    try {
+      await api(`/admin/categories/${id}`, { method: 'DELETE' });
+      toast('Category deleted', 'success');
+      loadCategories();
+    } catch (e) {
+      toast(e.message, 'error');
+    }
+  }
+
+  function viewCategoryPrompts(categoryId) {
+    switchTab('prompts');
+    document.getElementById('pt-filter-category').value = String(categoryId);
+    loadPrompts();
+  }
+
+  // ─── Prompts ─────────────────────────────────────────
+  async function loadPrompts() {
+    const holder = document.getElementById('pt-list');
+    holder.innerHTML = `<div class="loader"><div class="spinner"></div>Loading prompt templates…</div>`;
+
+    try {
+      if (!state.categories.length) {
+        const c = await api('/admin/categories');
+        state.categories = c.data || [];
+        populatePromptCategoryFilter();
+      }
+      await loadToolCatalog();
+
+      const qs = new URLSearchParams();
+      const cid = document.getElementById('pt-filter-category').value;
+      const typ = document.getElementById('pt-filter-type').value;
+      const lng = document.getElementById('pt-filter-lang').value;
+      const pub = document.getElementById('pt-filter-pub').value;
+      if (cid) qs.set('category_id', cid);
+      if (typ) qs.set('agent_type', typ);
+      if (lng) qs.set('language', lng);
+      if (pub === 'published') qs.set('only_published', 'true');
+
+      const data = await api(`/admin/prompts${qs.toString() ? '?' + qs : ''}`);
+      let list = data.data || [];
+      if (pub === 'draft') list = list.filter(p => !p.is_published);
+      state.prompts = list;
+      document.getElementById('count-prompts').textContent = state.prompts.length;
+      renderPrompts(list);
+    } catch (e) {
+      holder.innerHTML = `<div class="empty"><div class="empty-icon">!</div><h3>Couldn't load prompts</h3><p>${escapeHtml(e.message)}</p></div>`;
+    }
+  }
+
+  function populatePromptCategoryFilter() {
+    const sel = document.getElementById('pt-filter-category');
+    const current = sel.value;
+    sel.innerHTML = `<option value="">All categories</option>` +
+      state.categories.map(c => `<option value="${c.id}">${escapeHtml(c.name)}</option>`).join('');
+    sel.value = current;
+
+    const modalSel = document.getElementById('pt-category');
+    modalSel.innerHTML = state.categories.map(c =>
+      `<option value="${c.id}">${escapeHtml(c.name)}${c.is_published ? '' : ' (draft)'}</option>`
+    ).join('');
+  }
+
+  function renderPrompts(list) {
+    const holder = document.getElementById('pt-list');
+    if (!list.length) {
+      holder.innerHTML = `
+        <div class="empty">
+          <div class="empty-icon">&#128221;</div>
+          <h3>No prompt templates</h3>
+          <p>Create a prompt for a category, agent type, and language.</p>
+          <button class="btn btn-primary" style="margin-top: 14px;" onclick="openPromptModal()">+ Create First Prompt</button>
+        </div>`;
+      return;
+    }
+
+    const rows = list.map(p => {
+      const toolChips = (p.tool_ids || []).slice(0, 3).map(tid => {
+        const t = state.toolsById[tid];
+        return `<span class="chip" title="${escapeHtml(tid)}">${escapeHtml(t ? t.name : tid.slice(0, 8))}</span>`;
+      }).join('');
+      const extra = (p.tool_ids && p.tool_ids.length > 3) ? `<span class="chip">+${p.tool_ids.length - 3}</span>` : '';
+      const toolsCell = (p.tool_ids && p.tool_ids.length)
+        ? `${toolChips}${extra}`
+        : `<span style="color: var(--gray-400); font-size: 12px;">—</span>`;
+
+      return `
+      <tr>
+        <td><b>${escapeHtml(p.category_name || `#${p.category_id}`)}</b></td>
+        <td class="mono" title="${escapeHtml(p.prompt_key || '')}">${escapeHtml(p.prompt_key || '')}</td>
+        <td><span class="chip">${escapeHtml(p.agent_type)}</span></td>
+        <td><span class="chip">${escapeHtml(p.language)}</span></td>
+        <td class="mono">${escapeHtml(p.version)}</td>
+        <td>${toolsCell}</td>
+        <td>
+          <span class="badge ${p.is_published ? 'badge-success' : 'badge-warning'}">
+            <span class="badge-dot"></span>${p.is_published ? 'Published' : 'Draft'}
+          </span>
+        </td>
+        <td class="row-actions">
+          <button class="btn btn-ghost btn-sm" onclick="openPromptModal(${p.id})">Edit</button>
+          <button class="btn ${p.is_published ? 'btn-ghost' : 'btn-success'} btn-sm" onclick="togglePromptPublish(${p.id}, ${!p.is_published})">
+            ${p.is_published ? 'Unpublish' : 'Publish'}
+          </button>
+          <button class="btn btn-danger btn-sm" onclick="deletePrompt(${p.id})">Delete</button>
+        </td>
+      </tr>
+    `;
+    }).join('');
+
+    holder.innerHTML = `
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Category</th>
+              <th>Prompt Key</th>
+              <th>Agent Type</th>
+              <th>Language</th>
+              <th>Version</th>
+              <th>Tools</th>
+              <th>Status</th>
+              <th style="text-align: right;">Actions</th>
+            </tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>
+    `;
+  }
+
+  // ─── Tool catalog + picker ────────────────────────
+  async function loadToolCatalog() {
+    if (state.tools.length) return state.tools;
+    try {
+      const res = await api('/tools/catalog');
+      state.tools = res.data || [];
+      state.toolsById = {};
+      state.tools.forEach(t => { state.toolsById[t.tool_id] = t; });
+      return state.tools;
+    } catch (e) {
+      toast(`Couldn't load tool catalog: ${e.message}`, 'error');
+      return [];
+    }
+  }
+
+  function renderToolsPicker(selectedToolIds = []) {
+    const holder = document.getElementById('pt-tools');
+    const sel = new Set(selectedToolIds || []);
+    holder.innerHTML = state.tools.map(t => {
+      const checked = sel.has(t.tool_id) ? 'checked' : '';
+      const klass = sel.has(t.tool_id) ? 'tool-item selected' : 'tool-item';
+      return `
+        <label class="${klass}" data-tool-id="${escapeHtml(t.tool_id)}">
+          <input type="checkbox" value="${escapeHtml(t.tool_id)}" ${checked} onchange="onToolToggle(this)" />
+          <div class="tool-item-body">
+            <span class="tool-name">${escapeHtml(t.name)}</span>
+            <span class="tool-id">${escapeHtml(t.tool_id)}</span>
+          </div>
+        </label>`;
+    }).join('');
+    updateToolCount();
+  }
+
+  function onToolToggle(cb) {
+    const parent = cb.closest('.tool-item');
+    if (parent) parent.classList.toggle('selected', cb.checked);
+    updateToolCount();
+  }
+
+  function toolsSelectAll(flag) {
+    document.querySelectorAll('#pt-tools input[type="checkbox"]').forEach(cb => {
+      cb.checked = !!flag;
+      const p = cb.closest('.tool-item');
+      if (p) p.classList.toggle('selected', !!flag);
+    });
+    updateToolCount();
+  }
+
+  function getSelectedToolIds() {
+    return Array.from(document.querySelectorAll('#pt-tools input[type="checkbox"]:checked')).map(cb => cb.value);
+  }
+
+  function updateToolCount() {
+    const n = getSelectedToolIds().length;
+    const el = document.getElementById('pt-tool-count');
+    if (el) el.textContent = `${n} selected`;
+  }
+
+  async function openPromptModal(id = null) {
+    if (!state.categories.length) {
+      const c = await api('/admin/categories');
+      state.categories = c.data || [];
+    }
+    populatePromptCategoryFilter();
+    await loadToolCatalog();
+
+    document.getElementById('pt-id').value = id || '';
+    document.getElementById('pt-modal-title').textContent = id ? 'Edit Prompt Template' : 'New Prompt Template';
+
+    if (id) {
+      try {
+        const p = await api(`/admin/prompts/${id}`);
+        document.getElementById('pt-category').value = String(p.category_id);
+        document.getElementById('pt-type').value = p.agent_type;
+        document.getElementById('pt-lang').value = p.language;
+        document.getElementById('pt-version').value = p.version;
+        document.getElementById('pt-prompt').value = p.prompt;
+        document.getElementById('pt-notes').value = p.notes || '';
+        document.getElementById('pt-published').checked = p.is_published;
+        renderToolsPicker(p.tool_ids || []);
+      } catch (e) { toast(e.message, 'error'); return; }
+    } else {
+      const preselectCat = document.getElementById('pt-filter-category').value;
+      if (preselectCat) document.getElementById('pt-category').value = preselectCat;
+      document.getElementById('pt-type').value = 'customer_support';
+      document.getElementById('pt-lang').value = 'english';
+      document.getElementById('pt-version').value = 'v1';
+      document.getElementById('pt-prompt').value = '';
+      document.getElementById('pt-notes').value = '';
+      document.getElementById('pt-published').checked = false;
+      renderToolsPicker([]);
+    }
+    showModal('pt-modal');
+  }
+
+  async function savePrompt() {
+    const id = document.getElementById('pt-id').value;
+    const payload = {
+      category_id: parseInt(document.getElementById('pt-category').value, 10),
+      agent_type: document.getElementById('pt-type').value,
+      language: document.getElementById('pt-lang').value,
+      version: document.getElementById('pt-version').value.trim() || 'v1',
+      prompt: document.getElementById('pt-prompt').value,
+      notes: document.getElementById('pt-notes').value.trim() || null,
+      tool_ids: getSelectedToolIds(),
+      is_published: document.getElementById('pt-published').checked,
+    };
+
+    if (!payload.category_id) { toast('Select a category', 'error'); return; }
+    if (!payload.prompt || !payload.prompt.trim()) { toast('Prompt text is required', 'error'); return; }
+
+    const btn = document.getElementById('pt-save-btn');
+    btn.disabled = true; btn.textContent = 'Saving…';
+    try {
+      if (id) {
+        await api(`/admin/prompts/${id}`, { method: 'PATCH', body: JSON.stringify(payload) });
+        toast('Prompt updated', 'success');
+      } else {
+        await api(`/admin/prompts`, { method: 'POST', body: JSON.stringify(payload) });
+        toast('Prompt created', 'success');
+      }
+      closeModal('pt-modal');
+      loadPrompts();
+    } catch (e) {
+      toast(e.message, 'error');
+    } finally {
+      btn.disabled = false; btn.textContent = 'Save Prompt';
+    }
+  }
+
+  async function togglePromptPublish(id, newState) {
+    try {
+      await api(`/admin/prompts/${id}/publish`, {
+        method: 'POST',
+        body: JSON.stringify({ is_published: newState }),
+      });
+      toast(newState ? 'Prompt published' : 'Prompt unpublished', 'success');
+      loadPrompts();
+    } catch (e) { toast(e.message, 'error'); }
+  }
+
+  async function deletePrompt(id) {
+    if (!confirm('Delete this prompt template? This cannot be undone.')) return;
+    try {
+      await api(`/admin/prompts/${id}`, { method: 'DELETE' });
+      toast('Prompt deleted', 'success');
+      loadPrompts();
+    } catch (e) { toast(e.message, 'error'); }
+  }
+
+  // ─── Modal helpers ─────────────────────────────────
+  function showModal(id) { document.getElementById(id).classList.add('show'); }
+  function closeModal(id) { document.getElementById(id).classList.remove('show'); }
+
+  document.querySelectorAll('.modal-backdrop').forEach(el => {
+    el.addEventListener('click', e => { if (e.target === el) el.classList.remove('show'); });
+  });
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') document.querySelectorAll('.modal-backdrop.show').forEach(m => m.classList.remove('show'));
+  });
+
+  // ─── Utils ─────────────────────────────────────────
+  function escapeHtml(s) {
+    if (s == null) return '';
+    return String(s).replace(/[&<>"']/g, c => ({
+      '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
+    }[c]));
+  }
+
+  function refreshAll() {
+    loadCategories();
+    if (state.activeTab === 'prompts') loadPrompts();
+  }
+
+  // ─── Boot ──────────────────────────────────────────
+  loadAuth();
+  loadCategories();
+</script>
+
+</body>
+</html>

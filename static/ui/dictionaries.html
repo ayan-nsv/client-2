@@ -1,0 +1,819 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pronunciation Manager</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --bg: #0b0e14;
+            --card-bg: #11141b;
+            --primary: #3b82f6;
+            --success: #10b981;
+            --error: #ef4444;
+            --text: #f1f5f9;
+            --text-dim: #94a3b8;
+            --border: rgba(255, 255, 255, 0.08);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 2rem;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 800px;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .status-card {
+            padding: 1rem 1.5rem;
+            border-radius: 12px;
+            margin-bottom: 0.5rem;
+            display: none;
+            align-items: center;
+            gap: 0.75rem;
+            animation: slideDown 0.3s ease-out;
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            width: 100%;
+        }
+
+        @keyframes slideDown {
+            from { transform: translateY(-20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .status-success { border-color: var(--success); color: var(--success); }
+        .status-error { border-color: var(--error); color: var(--error); }
+
+        .section {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 2rem;
+        }
+
+        h1 {
+            font-size: 2.2rem;
+            margin-bottom: 1rem;
+            text-align: center;
+            font-weight: 800;
+            color: white;
+        }
+
+        h2 {
+            font-size: 1.1rem;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-dim);
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-dim);
+        }
+
+        input, select {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            color: white;
+            font-size: 1rem;
+            transition: all 0.2s;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: var(--primary);
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .btn {
+            width: 100%;
+            padding: 0.9rem;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover { opacity: 0.9; }
+
+        .btn-success {
+            background: var(--success) !important;
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text);
+            width: auto;
+            padding: 0.5rem 1rem;
+        }
+
+        .btn-outline:hover { background: rgba(255, 255, 255, 0.05); }
+
+        .btn-danger {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--error);
+            border: 1px solid rgba(239, 68, 68, 0.1);
+        }
+
+        .btn-danger:hover { background: rgba(239, 68, 68, 0.2); }
+
+        .rules-container {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 12px;
+            padding: 1.25rem;
+            border: 1px solid var(--border);
+        }
+
+        .rule-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr 45px;
+            gap: 0.75rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .loader {
+            width: 18px;
+            height: 18px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 0.8s linear infinite;
+            display: none;
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .id-badge {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 0.75rem;
+            color: var(--text-dim);
+        }
+
+        /* Dialog Box Styles */
+        .dialog-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(8px);
+            z-index: 1000;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            padding: 2rem;
+            animation: fadeIn 0.2s ease-out;
+        }
+
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        .dialog-box {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            width: 100%;
+            max-width: 550px;
+            max-height: 90vh;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+            animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @keyframes popIn { 
+            from { opacity: 0; transform: scale(0.9); } 
+            to { opacity: 1; transform: scale(1); } 
+        }
+
+        .dialog-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .dialog-content {
+            padding: 1.5rem;
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .dialog-footer {
+            padding: 1.25rem;
+            border-top: 1px solid var(--border);
+            display: flex;
+            justify-content: flex-end;
+            gap: 1rem;
+        }
+
+        .rule-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.75rem;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 10px;
+            margin-bottom: 0.6rem;
+            border: 1px solid var(--border);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Pronunciation Manager</h1>
+        <div class="section" style="padding: 1rem 1.25rem; display: flex; flex-wrap: wrap; align-items: center; gap: 0.75rem;">
+    <label for="auth-key" style="font-size: 0.85rem; color: var(--text-dim); white-space: nowrap;">API Auth</label>
+    <input id="auth-key" type="password" placeholder="X-API-KEY, Bearer token, or X-Special-Key" style="flex: 1; min-width: 200px;" />
+    <label for="admin-secret" style="font-size: 0.85rem; color: var(--text-dim); white-space: nowrap; margin-left: 8px;">Admin Secret</label>
+    <input id="admin-secret" type="password" placeholder="Admin Secret" style="flex: 1; min-width: 200px;" />
+    <button class="btn btn-outline" style="width: auto; padding: 0.5rem 1rem;" onclick="saveAuth()">Save</button>
+</div>
+        <div id="statusCard" class="status-card"></div>
+
+        <div class="section">
+            <h2><i class="fas fa-book"></i> 1. Create Dictionary</h2>
+            <div class="form-group">
+                <label>Dictionary Name</label>
+                <input type="text" id="dictName" placeholder="e.g. Tech Terms, Swedish Names...">
+            </div>
+
+            <div class="form-group">
+                <label>Link to Prompt (Optional)</label>
+                <select id="promptSelect">
+                    <option value="">No Prompt (Global)</option>
+                </select>
+                <p style="font-size: 0.75rem; color: var(--text-dim); margin-top: 0.4rem;">
+                    Linking to a prompt automatically attaches this dictionary to all agents using that prompt.
+                </p>
+            </div>
+
+            <div class="form-group">
+                <label>Rules Mapping</label>
+                <div class="rules-container" id="rulesContainer">
+                    <div class="rule-row">
+                        <input type="text" class="rule-string" placeholder="Original (e.g. SQL)">
+                        <input type="text" class="rule-alias" placeholder="Pronounce as (e.g. sequel)">
+                        <button class="btn btn-danger" onclick="this.parentElement.remove()"><i class="fas fa-trash"></i></button>
+                    </div>
+                </div>
+                <button class="btn btn-outline" style="margin-top: 1rem;" onclick="addRuleRow()">
+                    <i class="fas fa-plus"></i> Add Rule
+                </button>
+            </div>
+            
+            <button class="btn btn-primary" id="createBtn" onclick="createOnly()">
+                <div class="loader" id="createLoader"></div>
+                <span id="createBtnText">Create Dictionary Only</span>
+            </button>
+        </div>
+
+        <div class="section">
+            <h2><i class="fas fa-robot"></i> 2. Attach to Assistant</h2>
+            <div class="form-group">
+                <label>Select Dictionary</label>
+                <select id="dictionarySelect">
+                    <option value="">Loading dictionaries...</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Voice ID (Optional)</label>
+                <input type="text" id="overrideVoiceId" placeholder="e.g. 8Al3hFcl1x3aCwvxoEJC (Leave empty to keep current)">
+            </div>
+
+            <div class="form-group">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                    <label style="margin-bottom: 0;">Target Assistant</label>
+                    <div style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.8rem; color: var(--text-dim); cursor: pointer;" onclick="toggleManualMode()">
+                        <i id="manualIcon" class="fas fa-toggle-off"></i> Enter ID Manually
+                    </div>
+                </div>
+                
+                <div id="selectWrapper">
+                    <select id="assistantSelect">
+                        <option value="">Choose an assistant...</option>
+                    </select>
+                </div>
+                
+                <div id="manualWrapper" style="display: none;">
+                    <input type="text" id="manualAssistantId" placeholder="Paste Assistant UUID here...">
+                </div>
+            </div>
+
+            <button class="btn btn-primary" id="applyBtn" onclick="applyOnly()">
+                <div class="loader" id="applyLoader"></div>
+                <span id="applyBtnText">Attach Dictionary to Assistant</span>
+            </button>
+        </div>
+
+        <div class="section">
+            <h2><i class="fas fa-list-ul"></i> 3. Dictionary Inventory</h2>
+            <div id="dictionariesList" class="rules-container" style="background: rgba(0, 0, 0, 0.1); max-height: 400px; overflow-y: auto;">
+                <p style="color: var(--text-dim); font-size: 0.9rem; text-align: center;">Fetching inventory...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Dialog Box -->
+    <div id="dialogOverlay" class="dialog-overlay" onclick="closeDialog(event)">
+        <div class="dialog-box" onclick="event.stopPropagation()">
+            <div class="dialog-header">
+                <h2 id="dialogTitle" style="margin-bottom: 0;"><i class="fas fa-book-open"></i> Dictionary Rules</h2>
+                <button class="btn btn-outline" style="border:none; width:auto; padding:0; font-size:1.5rem;" onclick="closeDialog()">&times;</button>
+            </div>
+            
+            <div class="dialog-content">
+                <div id="dialogRulesList">
+                    <!-- Rules go here -->
+                </div>
+
+                <div style="margin-top: 1.5rem; border-top: 1px solid var(--border); padding-top: 1.5rem;">
+                    <h3 style="font-size: 0.85rem; margin-bottom: 0.75rem; color: var(--text-dim);">ADD NEW RULE</h3>
+                    <div style="display: flex; gap: 0.5rem;">
+                        <input type="text" id="quickRuleString" placeholder="Original" style="font-size: 0.85rem;">
+                        <input type="text" id="quickRuleAlias" placeholder="Alias" style="font-size: 0.85rem;">
+                        <button class="btn btn-primary" style="width: 50px; padding: 0;" onclick="addQuickRule()"><i class="fas fa-plus"></i></button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="dialog-footer" style="justify-content: space-between; align-items: center;">
+                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                    <select id="dialogPromptSelect" style="width: 240px; font-size: 0.85rem; padding: 0.5rem;">
+                        <option value="">Link to Prompt...</option>
+                    </select>
+                    <button id="dialogUnlinkBtn" class="btn btn-danger" style="display:none; padding: 0.5rem; font-size: 0.85rem; width: auto;" onclick="unlinkFromPrompt()">
+                        <i class="fas fa-unlink"></i> Unlink
+                    </button>
+                    <button class="btn btn-outline" style="padding: 0.5rem; font-size: 0.85rem;" onclick="linkExistingToPrompt()">
+                        <i class="fas fa-link"></i> Link
+                    </button>
+                </div>
+                <button class="btn btn-outline" style="width: auto;" onclick="closeDialog()">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = '/api/v1/vapi';
+        let assistants = [];
+        let isManualMode = false;
+
+        function loadAuth() {
+    const savedKey = localStorage.getItem('dict_admin_auth') || '';
+    const savedAdmin = localStorage.getItem('dict_admin_secret') || '';
+    document.getElementById('auth-key').value = savedKey;
+    document.getElementById('admin-secret').value = savedAdmin;
+}
+
+        function saveAuth() {
+    const val = document.getElementById('auth-key').value.trim();
+    const adminVal = document.getElementById('admin-secret').value.trim();
+    localStorage.setItem('dict_admin_auth', val);
+    localStorage.setItem('dict_admin_secret', adminVal);
+    showStatus('Auth and admin secret saved', 'success');
+    fetchAssistants();
+    fetchDictionaries();
+}
+
+        function authHeaders() {
+    const key = (document.getElementById('auth-key').value || '').trim();
+    const admin = (document.getElementById('admin-secret').value || '').trim();
+    const headers = {};
+    if (admin) {
+        headers['X-ADMIN-SECRET'] = admin;
+    }
+    if (!key) return headers;
+    if (key.startsWith('eyJ') || key.length >= 120) {
+        headers['Authorization'] = `Bearer ${key}`;
+        return headers;
+    }
+    if (key.length >= 20) {
+        headers['X-API-KEY'] = key;
+        return headers;
+    }
+    headers['X-Special-Key'] = key;
+    return headers;
+}
+
+        async function api(path, opts = {}) {
+            const headers = {
+                'Content-Type': 'application/json',
+                ...authHeaders(),
+                ...(opts.headers || {}),
+            };
+            const res = await fetch(`${API_BASE}${path}`, { ...opts, headers });
+            const text = await res.text();
+            let data = null;
+            try { data = text ? JSON.parse(text) : null; } catch (_) { data = { raw: text }; }
+            if (!res.ok) {
+                const msg = (data && (data.detail || data.message || data.error)) || `HTTP ${res.status}`;
+                throw new Error(typeof msg === 'string' ? msg : JSON.stringify(msg));
+            }
+            return data;
+        }
+
+        async function fetchAssistants() {
+            try {
+                assistants = await api('/assistants');
+                const select = document.getElementById('assistantSelect');
+                select.innerHTML = '<option value="">Choose an assistant...</option>';
+                assistants.forEach(asst => {
+                    const option = document.createElement('option');
+                    option.value = asst.id;
+                    option.textContent = (asst.name || 'Untitled') + ' (' + asst.id.substring(0,8) + '...)';
+                    select.appendChild(option);
+                });
+            } catch (error) {
+                console.error('Error fetching assistants:', error);
+                showStatus('Failed to load assistants.', 'error');
+            }
+        }
+
+        async function fetchDictionaries() {
+            try {
+                // Fetch prompts first for the dropdown
+                fetchPrompts();
+
+                let dicts = await api('/dictionaries');
+                const container = document.getElementById('dictionariesList');
+                const dropdown = document.getElementById('dictionarySelect');
+                
+                if (dicts && !Array.isArray(dicts)) {
+                    dicts = dicts.pronunciation_dictionaries || dicts.dictionaries || dicts.data || dicts.results || [];
+                }
+
+                if (!dicts || !Array.isArray(dicts) || dicts.length === 0) {
+                    container.innerHTML = '<p style="color: var(--text-dim); font-size: 0.9rem; text-align: center;">No dictionaries found.</p>';
+                    dropdown.innerHTML = '<option value="">No dictionaries found</option>';
+                    return;
+                }
+
+                container.innerHTML = '';
+                dropdown.innerHTML = '<option value="">Choose a dictionary...</option>';
+
+                dicts.forEach(dict => {
+                    const dictId = dict.id || dict.pronunciation_dictionary_id;
+                    const latestVersion = dict.latest_version_id || dict.latestVersionId || "";
+
+                    const item = document.createElement('div');
+                    item.className = 'clickable-dict';
+                    item.style.display = 'flex';
+                    item.style.justifyContent = 'space-between';
+                    item.style.padding = '0.75rem 1rem';
+                    item.style.borderBottom = '1px solid var(--border)';
+                    item.style.cursor = 'pointer';
+                    item.style.borderRadius = '8px';
+                    item.style.transition = 'background 0.2s';
+                    
+                    item.onmouseover = () => item.style.background = 'rgba(255,255,255,0.05)';
+                    item.onmouseout = () => item.style.background = 'transparent';
+                    item.onclick = () => showDictionaryRules(dictId);
+
+                    item.innerHTML = `
+                        <div style="flex: 1;">
+                            <div style="font-weight: 600;">${dict.name || 'Untitled'}</div>
+                            <div style="font-size: 0.7rem; color: var(--text-dim);">Version: ${latestVersion.substring(0,10)}...</div>
+                        </div>
+                        <span class="id-badge" style="font-size: 0.7rem; height: fit-content;">${dictId.substring(0,8)}...</span>
+                    `;
+                    container.appendChild(item);
+
+                    const option = document.createElement('option');
+                    option.value = dictId;
+                    option.dataset.version = latestVersion;
+                    option.textContent = (dict.name || 'Untitled') + ' (' + dictId.substring(0,8) + '...)';
+                    dropdown.appendChild(option);
+                });
+            } catch (error) {
+                console.error('Error fetching dictionaries:', error);
+                document.getElementById('dictionariesList').innerHTML = '<p style="color: var(--error);">Failed to load inventory.</p>';
+            }
+        }
+
+        async function showDictionaryRules(dictId) {
+            const overlay = document.getElementById('dialogOverlay');
+            const list = document.getElementById('dialogRulesList');
+            const title = document.getElementById('dialogTitle');
+            const promptSelect = document.getElementById('dialogPromptSelect');
+            
+            overlay.style.display = 'flex';
+            overlay.dataset.activeId = dictId;
+            list.innerHTML = '<p style="text-align: center; color: var(--text-dim); padding: 2rem;">Loading rules...</p>';
+            
+            promptSelect.value = ""; // Reset
+            title.innerHTML = `<i class="fas fa-book-open"></i> Dictionary Rules`;
+
+            try {
+                // 1. Fetch Rules
+                const data = await api(`/dictionaries/${dictId}`);
+                const linkData = await api(`/dictionaries/${dictId}/link`);
+                
+                if (linkData.linked) {
+                    const linkedId = linkData.prompt_template_id || linkData.category_id;
+                    const linkedLabel = linkData.prompt_label || linkData.category_name;
+                    promptSelect.value = linkedId;
+                    title.innerHTML += ` <span style="font-size: 0.7rem; background: var(--success); color: white; padding: 2px 8px; border-radius: 20px; margin-left: 10px; vertical-align: middle; text-transform: uppercase;">LINKED: ${linkedLabel}</span>`;
+                    document.getElementById('dialogUnlinkBtn').style.display = 'block';
+                    document.getElementById('dialogUnlinkBtn').onclick = () => unlinkFromPrompt(linkedId);
+                } else {
+                    document.getElementById('dialogUnlinkBtn').style.display = 'none';
+                }
+
+                const rules = data.rules || [];
+                if (rules.length === 0) {
+                    list.innerHTML = '<p style="text-align: center; color: var(--text-dim); padding: 2rem;">No rules defined.</p>';
+                    return;
+                }
+
+                list.innerHTML = '';
+                rules.forEach(rule => {
+                    const ruleString = rule.string_to_replace || rule.stringToReplace;
+                    const ruleEl = document.createElement('div');
+                    ruleEl.className = 'rule-item';
+                    ruleEl.innerHTML = `
+                        <div style="display: flex; align-items: center; gap: 0.75rem; flex: 1;">
+                            <span style="color: var(--text-dim); font-size: 0.85rem;">${ruleString}</span>
+                            <i class="fas fa-arrow-right" style="font-size: 0.7rem; color: var(--primary);"></i>
+                            <span style="font-weight: 600; color: var(--success); font-size: 0.85rem;">${rule.alias}</span>
+                        </div>
+                        <button class="btn btn-danger" style="padding: 0.2rem 0.4rem; font-size: 0.7rem; width: auto;" onclick="removeRule('${dictId}', '${ruleString}')">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    `;
+                    list.appendChild(ruleEl);
+                });
+            } catch (error) {
+                console.error('UI Rule Loading Error:', error);
+                list.innerHTML = `<p style="color: var(--error); text-align: center; padding: 2rem;">Error loading rules. Check console.</p>`;
+            }
+        }
+
+        function closeDialog() {
+            document.getElementById('dialogOverlay').style.display = 'none';
+        }
+
+        async function linkExistingToPrompt() {
+            const dictId = document.getElementById('dialogOverlay').dataset.activeId;
+            const promptId = document.getElementById('dialogPromptSelect').value;
+            if (!promptId) return alert('Please select a prompt first.');
+            
+            try {
+                const data = await api(`/dictionaries/${dictId}/link`, {
+                    method: 'POST',
+                    body: JSON.stringify({ prompt_template_id: parseInt(promptId) })
+                });
+                showStatus(data.message, 'success');
+                closeDialog();
+            } catch (error) {
+                alert(error.message);
+            }
+        }
+        
+        async function unlinkFromPrompt(promptTemplateId) {
+            if (!confirm('Are you sure you want to unlink this prompt? Agents using it will no longer be synced.')) return;
+            
+            try {
+                const result = await api(`/prompts/${promptTemplateId}/unlink`, { method: 'DELETE' });
+                if (result.success) {
+                    showStatus('Prompt unlinked successfully.', 'success');
+                    showDictionaryRules(document.getElementById('dialogOverlay').dataset.activeId);
+                } else {
+                    alert('Failed to unlink: ' + (result.detail || 'Unknown error'));
+                }
+            } catch (error) {
+                alert('Error: ' + error.message);
+            }
+        }
+
+        async function removeRule(dictId, ruleString) {
+            if (!confirm(`Remove rule for "${ruleString}"?`)) return;
+            try {
+                await api(`/dictionaries/${dictId}/remove-rules`, {
+                    method: 'POST',
+                    body: JSON.stringify({ rule_strings: [ruleString] })
+                });
+                showDictionaryRules(dictId);
+            } catch (error) { alert(error.message); }
+        }
+
+        async function addQuickRule() {
+            const id = document.getElementById('dialogOverlay').dataset.activeId;
+            const string = document.getElementById('quickRuleString').value;
+            const alias = document.getElementById('quickRuleAlias').value;
+            if (!string || !alias) return;
+            try {
+                await api(`/dictionaries/${id}/add-rules`, {
+                    method: 'POST',
+                    body: JSON.stringify({ rules: [{ string_to_replace: string, type: 'alias', alias: alias }] })
+                });
+                document.getElementById('quickRuleString').value = '';
+                document.getElementById('quickRuleAlias').value = '';
+                showDictionaryRules(id);
+            } catch (error) { alert(error.message); }
+        }
+
+        async function deleteDictionary(id) {
+            if (!confirm('Are you sure? ElevenLabs dictionaries cannot be fully deleted from their system via API, but this will remove it from the dashboard inventory and clear its rules.')) return;
+            try {
+                const data = await api(`/dictionaries/${id}`, { method: 'DELETE' });
+                closeDialog();
+                fetchDictionaries();
+                showStatus(data.message || 'Dictionary cleared and removed from view.', 'success');
+            } catch (error) { alert(error.message); }
+        }
+
+        function toggleManualMode() {
+            isManualMode = !isManualMode;
+            const selectWrapper = document.getElementById('selectWrapper');
+            const manualWrapper = document.getElementById('manualWrapper');
+            const icon = document.getElementById('manualIcon');
+            if (isManualMode) {
+                selectWrapper.style.display = 'none';
+                manualWrapper.style.display = 'block';
+                icon.className = 'fas fa-toggle-on';
+                icon.style.color = 'var(--primary)';
+            } else {
+                selectWrapper.style.display = 'block';
+                manualWrapper.style.display = 'none';
+                icon.className = 'fas fa-toggle-off';
+                icon.style.color = 'var(--text-dim)';
+            }
+        }
+
+        function addRuleRow() {
+            const container = document.getElementById('rulesContainer');
+            const row = document.createElement('div');
+            row.className = 'rule-row';
+            row.innerHTML = `
+                <input type="text" class="rule-string" placeholder="Original">
+                <input type="text" class="rule-alias" placeholder="Pronounce as">
+                <button class="btn btn-danger" onclick="this.parentElement.remove()"><i class="fas fa-trash"></i></button>
+            `;
+            container.appendChild(row);
+        }
+
+        function showStatus(msg, type) {
+            const card = document.getElementById('statusCard');
+            card.className = `status-card status-${type}`;
+            card.innerHTML = `<i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'}"></i> ${msg}`;
+            card.style.display = 'flex';
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        async function createOnly() {
+            const name = document.getElementById('dictName').value;
+            const btn = document.getElementById('createBtn');
+            const loader = document.getElementById('createLoader');
+            const btnText = document.getElementById('createBtnText');
+            const promptId = document.getElementById('promptSelect').value;
+            if (!name) return showStatus('Enter name', 'error');
+            const rules = [];
+            document.querySelectorAll('.rule-row').forEach(row => {
+                const s = row.querySelector('.rule-string').value;
+                const a = row.querySelector('.rule-alias').value;
+                if (s && a) rules.push({ stringToReplace: s, type: 'alias', alias: a });
+            });
+            if (rules.length === 0) return showStatus('Add a rule', 'error');
+            btn.disabled = true; loader.style.display = 'block'; btnText.innerText = 'Creating...';
+            try {
+                await api('/dictionaries', {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        name,
+                        rules,
+                        prompt_template_id: promptId ? parseInt(promptId) : null
+                    })
+                });
+                showStatus('Created!', 'success');
+                document.getElementById('dictName').value = '';
+                btn.classList.add('btn-success');
+                btnText.innerText = 'Success!';
+                setTimeout(() => { btn.classList.remove('btn-success'); btnText.innerText = 'Create Dictionary Only'; }, 2000);
+                fetchDictionaries();
+            } catch (error) { showStatus(error.message, 'error'); } 
+            finally { btn.disabled = false; loader.style.display = 'none'; }
+        }
+
+        async function applyOnly() {
+            const dictId = document.getElementById('dictionarySelect').value;
+            const voiceId = document.getElementById('overrideVoiceId').value.trim();
+            const assistantId = isManualMode ? document.getElementById('manualAssistantId').value.trim() : document.getElementById('assistantSelect').value;
+            const btn = document.getElementById('applyBtn');
+            const loader = document.getElementById('applyLoader');
+            const btnText = document.getElementById('applyBtnText');
+            if (!dictId || !assistantId) return showStatus('Select dict & assistant', 'error');
+            btn.disabled = true; loader.style.display = 'block'; btnText.innerText = 'Attaching...';
+            try {
+                // Always fetch the very latest dictionary details to get the current versionId
+                // This ensures that if rules were just added, we use the newest version.
+                const dictData = await api(`/dictionaries/${dictId}`);
+                
+                const versionId = dictData.latest_version_id || dictData.latestVersionId || "";
+                if (!versionId) throw new Error('No version ID found for this dictionary');
+
+                const patchPayload = {
+                    voice: {
+                        provider: "11labs",
+                        pronunciationDictionaryLocators: [
+                            {
+                                pronunciationDictionaryId: dictId,
+                                versionId: versionId 
+                            }
+                        ]
+                    }
+                };
+                if (voiceId) patchPayload.voice.voiceId = voiceId;
+                await api(`/assistants/${assistantId}`, {
+                    method: 'PATCH',
+                    body: JSON.stringify(patchPayload)
+                });
+                showStatus('Attached & Published!', 'success');
+                btn.classList.add('btn-success');
+                btnText.innerText = 'Success!';
+                setTimeout(() => { btn.classList.remove('btn-success'); btnText.innerText = 'Attach Dictionary to Assistant'; }, 2000);
+            } catch (error) { showStatus(error.message, 'error'); } 
+            finally { btn.disabled = false; loader.style.display = 'none'; }
+        }
+
+        async function fetchPrompts() {
+            try {
+                const data = await api('/prompts');
+                const prompts = data.data || data;
+                const select = document.getElementById('promptSelect');
+                if (!select) return;
+                
+                select.innerHTML = '<option value="">No Prompt (Global)</option>';
+                const dialogSelect = document.getElementById('dialogPromptSelect');
+                if (dialogSelect) {
+                    dialogSelect.innerHTML = '<option value="">Link to Prompt...</option>';
+                }
+
+                prompts.forEach(prompt => {
+                    const option = document.createElement('option');
+                    option.value = prompt.id;
+                    option.textContent = prompt.label || `${prompt.category_name} — ${prompt.agent_type} / ${prompt.language} (${prompt.version})`;
+                    select.appendChild(option);
+
+                    if (dialogSelect) {
+                        dialogSelect.appendChild(option.cloneNode(true));
+                    }
+                });
+            } catch (error) {
+                console.error('Error fetching prompts:', error);
+            }
+        }
+
+        loadAuth();
+        fetchAssistants();
+        fetchDictionaries();
+    </script>
+</body>
+</html>

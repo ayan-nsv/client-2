@@ -1,0 +1,1404 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Vapi Call Review</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --bg: #f8fafc;
+      --surface: #ffffff;
+      --surface2: #f1f5f9;
+      --border: #e2e8f0;
+      --accent: #007bff;
+      --accent-hover: #0069d9;
+      --accent-dim: rgba(0, 123, 255, 0.05);
+      --green: #28a745;
+      --red: #dc3545;
+      --yellow: #ffc107;
+      --text: #334155;
+      --text-muted: #64748b;
+      --text-dim: #94a3b8;
+      --chip-bg: #f1f5f9;
+      --chip-sel: #cbd5e1;
+      --radius: 8px;
+      --radius-sm: 4px;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacMacSystemFont, 'Segoe UI', Roboto, 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* ─── Top bar (minimal) ─────────────────────────────────── */
+    header {
+      display: none;
+      /* Screenshot doesn't show a top logo bar */
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    /* ─── Main layout ─────────────────────────────────────────── */
+    .layout {
+      display: flex;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    /* ─── Left panel ──────────────────────────────────────────── */
+    .left {
+      width: 450px;
+      flex-shrink: 0;
+      display: flex;
+      flex-direction: column;
+      border-right: 1px solid var(--border);
+      background: var(--surface);
+      overflow: hidden;
+    }
+
+    .left-header {
+      padding: 20px 24px 10px;
+      flex-shrink: 0;
+    }
+
+    @media (max-width: 480px) {
+      .left-header > div {
+        flex-direction: column;
+        align-items: flex-start !important;
+        gap: 12px;
+      }
+      .left-header .subtitle {
+        margin-bottom: 8px;
+      }
+    }
+
+    .left-header h2 {
+      font-size: 18px;
+      font-weight: 700;
+      color: #000;
+      margin-bottom: 2px;
+    }
+
+    .left-header .subtitle {
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    .search-wrap {
+      padding: 10px 24px 15px;
+      flex-shrink: 0;
+    }
+
+    .search-wrap input {
+      width: 100%;
+      background: #f8fafc;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 10px 12px;
+      color: var(--text);
+      font-size: 14px;
+      outline: none;
+    }
+
+    .search-wrap input::placeholder {
+      color: var(--text-dim);
+    }
+
+    .search-wrap input:focus {
+      border-color: var(--accent);
+    }
+
+    .filter-controls {
+      display: flex;
+      gap: 12px;
+      padding: 0 24px 15px;
+      flex-shrink: 0;
+    }
+
+    .filter-controls input {
+      background: #f8fafc;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 10px 12px;
+      color: var(--text);
+      font-size: 14px;
+      outline: none;
+    }
+
+    .filter-controls input[type="date"] {
+      flex: 1;
+    }
+
+    .filter-controls input[type="search"] {
+      flex: 2;
+    }
+
+    .filter-controls input:focus {
+      border-color: var(--accent);
+    }
+
+    .call-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 0;
+    }
+
+    .call-list::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    .call-list::-webkit-scrollbar-track {
+      background: #f1f5f9;
+    }
+
+    .call-list::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 4px;
+      border: 2px solid #f1f5f9;
+    }
+
+    .call-list::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
+    }
+
+    .call-card {
+      padding: 20px 24px;
+      cursor: pointer;
+      border-bottom: 1px solid #f1f5f9;
+      transition: background .1s;
+      position: relative;
+    }
+
+    .call-card:hover {
+      background: #f8fafc;
+    }
+
+    .call-card.active {
+      background: #f0f7ff;
+    }
+
+    .card-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .card-id {
+      font-size: 14px;
+      font-weight: 600;
+      font-family: 'SF Mono', 'Fira Mono', monospace;
+      color: var(--text-muted);
+    }
+
+    .badge {
+      font-size: 11px;
+      font-weight: 600;
+      padding: 4px 12px;
+      border-radius: 12px;
+      text-transform: uppercase;
+      letter-spacing: .5px;
+    }
+
+    /* Colors from screenshot */
+    .badge-reviewed {
+      background: #dcfce7;
+      color: #166534;
+    }
+
+    .badge-pending {
+      background: #fefce8;
+      color: #854d0e;
+    }
+
+    .status-completed {
+      background: #dcfce7;
+      color: #166534;
+    }
+
+    .status-failed {
+      background: #fee2e2;
+      color: #991b1b;
+    }
+
+    .status-missed {
+      background: #f1f5f9;
+      color: #475569;
+    }
+
+    .card-meta {
+      font-size: 13px;
+      font-weight: 600;
+      color: #000;
+      margin-bottom: 4px;
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .card-submeta {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+    }
+
+    .card-summary {
+      font-size: 13px;
+      color: var(--text-muted);
+      line-height: 1.4;
+      margin-bottom: 8px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .card-chip {
+      display: inline-block;
+      font-size: 12px;
+      font-weight: 600;
+      background: #f1f5f9;
+      border-radius: 4px;
+      padding: 2px 8px;
+      color: #000;
+    }
+
+    /* ─── Right panel ─────────────────────────────────────────── */
+    .right {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      background: var(--surface);
+      overflow: hidden;
+    }
+
+    .right-header {
+      padding: 24px 32px 18px;
+      border-bottom: 1px solid #f1f5f9;
+      flex-shrink: 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+    }
+
+    .right-header h3 {
+      font-size: 18px;
+      font-weight: 700;
+      font-family: 'SF Mono', 'Fira Mono', monospace;
+      color: #000;
+      margin-bottom: 4px;
+    }
+
+    .right-header .meta-line {
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    .btn-download-top {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: #2b3a55;
+      color: #fff;
+      font-size: 13px;
+      font-weight: 600;
+      padding: 8px 16px;
+      border-radius: 8px;
+      text-decoration: none;
+      transition: background .15s, opacity .15s;
+    }
+
+    .btn-download-top:hover:not(.disabled) {
+      background: #1e293b;
+    }
+
+    .btn-download-top.disabled {
+      background: #e2e8f0;
+      color: #94a3b8;
+      cursor: not-allowed;
+      pointer-events: none;
+    }
+
+    .btn-download-top svg {
+      width: 14px;
+      height: 14px;
+      fill: currentColor;
+    }
+
+    .right-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 32px;
+    }
+
+    .right-body::-webkit-scrollbar {
+      width: 4px;
+    }
+
+    .right-body::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    .right-body::-webkit-scrollbar-thumb {
+      background: var(--border);
+      border-radius: 2px;
+    }
+
+    /* Transcript card */
+    .transcript-card {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px;
+      margin-bottom: 24px;
+    }
+
+    .transcript-card h4 {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--text-dim);
+      margin-bottom: 10px;
+    }
+
+    .transcript-text {
+      font-size: 13px;
+      color: var(--text-muted);
+      line-height: 1.65;
+      max-height: 160px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+    }
+
+    .transcript-text::-webkit-scrollbar {
+      width: 3px;
+    }
+
+    .transcript-text::-webkit-scrollbar-thumb {
+      background: var(--border);
+    }
+
+    /* Section labels */
+    .section-label {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .05em;
+      color: #718096;
+      margin-bottom: 20px;
+    }
+
+    /* Rating rows */
+    .ratings-block {
+      margin-bottom: 28px;
+    }
+
+    .rating-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 18px 0;
+      border-bottom: 1px solid #f1f5f9;
+    }
+
+    .rating-row:last-child {
+      border-bottom: none;
+    }
+
+    .rating-label {
+      font-size: 15px;
+      font-weight: 500;
+      color: #000;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .required-star {
+      color: var(--red);
+      margin-left: 2px;
+    }
+
+    .star-chips {
+      display: flex;
+      gap: 8px;
+    }
+
+    .star-chip {
+      width: 40px;
+      height: 40px;
+      border-radius: 8px;
+      background: #f1f5f9;
+      border: none;
+      color: #475569;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background .12s, color .12s, border-color .12s, transform .08s;
+      font-family: inherit;
+    }
+
+    .star-chip:hover:not(.selected) {
+      background: #e2e8f0;
+    }
+
+    .star-chip.selected {
+      background: #2b3a55;
+      /* Dark gray/blue like screenshot? actually screenshot chips are light gray by default */
+      color: #fff;
+      transform: scale(1.08);
+    }
+
+    /* Issues */
+    .issues-block {
+      margin-top: 32px;
+    }
+
+    .issues-row {
+      display: flex;
+      gap: 24px;
+    }
+
+    .issue-label {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+      user-select: none;
+      font-size: 14px;
+      font-weight: 500;
+    }
+
+    .issue-label input[type=checkbox] {
+      width: 18px;
+      height: 18px;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      display: block;
+      /* Override display: none */
+    }
+
+    .issue-box {
+      width: 38px;
+      height: 38px;
+      border-radius: 8px;
+      background: var(--chip-bg);
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      transition: background .12s, border-color .12s;
+    }
+
+    .issue-label input:checked~.issue-content .issue-box {
+      background: var(--accent-dim);
+      border-color: var(--accent);
+    }
+
+    .issue-content {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .issue-name {
+      font-size: 13px;
+      color: var(--text-muted);
+      transition: color .12s;
+    }
+
+    .ai-summary-box {
+      background: #f8fafc;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px 14px;
+      font-size: 13.5px;
+      line-height: 1.5;
+      color: #334155;
+      margin-top: 8px;
+      white-space: pre-wrap;
+    }
+
+    .issue-label:has(input:checked) .issue-name {
+      color: var(--text);
+    }
+
+    /* Text fields */
+    .fields-block {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      margin-bottom: 28px;
+    }
+
+    .field-group label {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+      text-transform: uppercase;
+      letter-spacing: .8px;
+    }
+
+    .field-group textarea {
+      width: 100%;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 10px 12px;
+      color: var(--text);
+      font-size: 13px;
+      font-family: inherit;
+      resize: vertical;
+      min-height: 72px;
+      outline: none;
+      line-height: 1.5;
+    }
+
+    .field-group textarea:focus {
+      border-color: var(--accent);
+    }
+
+    .field-group textarea::placeholder {
+      color: var(--text-dim);
+    }
+
+    /* ─── Footer submit bar ───────────────────────────────────── */
+    .right-footer {
+      padding: 24px 32px;
+      border-top: 1px solid var(--border);
+      flex-shrink: 0;
+      display: flex;
+      gap: 12px;
+      background: var(--surface);
+    }
+
+    .btn-submit {
+      width: 100%;
+      background: #007bff;
+      /* Vibrant blue matches screenshot */
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 16px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: inherit;
+      transition: background .15s, opacity .15s, transform .08s;
+    }
+
+    .btn-submit:hover {
+      background: #0069d9;
+    }
+
+    .btn-submit:active {
+      transform: translateY(0);
+    }
+
+    .btn-submit:disabled {
+      background: #e2e8f0;
+      color: #94a3b8;
+      cursor: not-allowed;
+      opacity: 1;
+      /* Override previous opacity */
+      transform: none;
+    }
+
+    /* ─── Empty state ─────────────────────────────────────────── */
+    .empty-state {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      color: var(--text-dim);
+    }
+
+    .empty-icon {
+      font-size: 40px;
+      opacity: .5;
+    }
+
+    .empty-state p {
+      font-size: 14px;
+    }
+
+    /* ─── Toast ───────────────────────────────────────────────── */
+    .toast {
+      position: fixed;
+      bottom: 28px;
+      right: 28px;
+      background: var(--green);
+      color: #0a1a0f;
+      font-weight: 600;
+      font-size: 13px;
+      padding: 11px 20px;
+      border-radius: var(--radius-sm);
+      opacity: 0;
+      transform: translateY(10px);
+      transition: opacity .25s, transform .25s;
+      pointer-events: none;
+      z-index: 99;
+    }
+
+    .toast.error {
+      background: var(--red);
+      color: #fff;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* ─── Loading spinner ─────────────────────────────────────── */
+    .spinner {
+      width: 32px;
+      height: 32px;
+      border: 3px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin .7s linear infinite;
+      margin: 40px auto;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    /* ─── Responsive Adjustments ───────────────────────────── */
+    @media (max-width: 1024px) {
+      .left {
+        width: 320px;
+      }
+    }
+
+    @media (max-width: 768px) {
+      body {
+        height: auto;
+        overflow: auto;
+      }
+      .layout {
+        display: block;
+        height: auto;
+        overflow: visible;
+      }
+      .left {
+        width: 100%;
+        border-right: none;
+        height: 100vh;
+      }
+      .right {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100vh;
+        z-index: 10;
+        background: #fff;
+      }
+      .right.active {
+        display: flex;
+      }
+      .left.hidden {
+        display: none;
+      }
+      .right-header {
+        padding: 16px;
+      }
+      .right-body {
+        padding: 16px;
+      }
+      .right-footer {
+        padding: 16px;
+      }
+      .rating-row {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+      }
+      .star-chips {
+        flex-wrap: wrap;
+      }
+    }
+
+    .btn-back {
+      display: none;
+      align-items: center;
+      gap: 4px;
+      background: transparent;
+      border: none;
+      color: var(--accent);
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      margin-bottom: 12px;
+      padding: 0;
+    }
+
+    @media (max-width: 768px) {
+      .btn-back {
+        display: flex;
+      }
+    }
+    /* ── Company picker (agent-picker style) ─────────────────── */
+    .company-picker-wrap {
+      padding: 12px 24px 0;
+    }
+    .agent-picker {
+      position: relative;
+    }
+    .agent-trigger {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      width: 100%;
+      height: 38px;
+      padding: 0 12px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text);
+      cursor: pointer;
+      transition: border-color 0.15s;
+    }
+    .agent-trigger:hover, .agent-trigger.open {
+      border-color: var(--accent);
+    }
+    .agent-trigger-chevron { font-size: 10px; color: var(--text-muted); }
+    .agent-dropdown {
+      position: absolute;
+      top: calc(100% + 4px);
+      left: 0;
+      right: 0;
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+      z-index: 200;
+      overflow: hidden;
+    }
+    .agent-dropdown.hidden { display: none; }
+    .agent-search-wrap { padding: 10px 12px; border-bottom: 1px solid var(--border); }
+    .agent-search-wrap input {
+      width: 100%;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 6px 10px;
+      font-size: 13px;
+      outline: none;
+      background: var(--surface2);
+    }
+    .agent-options-list { max-height: 240px; overflow-y: auto; padding: 6px; }
+    .agent-option {
+      display: block;
+      width: 100%;
+      text-align: left;
+      padding: 8px 10px;
+      border-radius: 6px;
+      border: none;
+      background: transparent;
+      cursor: pointer;
+      font-size: 13px;
+      color: var(--text);
+      transition: background 0.12s;
+    }
+    .agent-option:hover { background: var(--surface2); }
+    .agent-option.active { background: var(--accent-dim); font-weight: 600; }
+    .agent-option-name { font-weight: 600; font-size: 13px; }
+    .agent-option-sub { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+    .agent-empty { padding: 12px; font-size: 13px; color: var(--text-muted); text-align: center; }
+  </style>
+</head>
+
+<body>
+
+  <!-- Auth setup bar -->
+  <div class="setup-bar" id="setupBar" style="display: none; gap: 12px; align-items: flex-end; padding: 16px 24px; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; margin: 20px auto; max-width: 1400px; width: calc(100% - 40px); box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
+    <div style="display: flex; flex-direction: column; gap: 4px;">
+      <label for="adminSecret" style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 4px; display: block;">Admin Secret</label>
+      <input id="adminSecret" type="password" placeholder="X-ADMIN-SECRET" style="height: 38px; padding: 0 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 13px; min-width: 240px; background: #fff;" />
+    </div>
+    <button type="button" onclick="saveAuth()" class="btn-primary" style="height: 38px; padding: 0 20px; font-size: 13px; font-weight: 600; border-radius: 8px; border: none; cursor: pointer; background: var(--green, #28a745); color: #fff; transition: background 0.2s;">Connect</button>
+    <span id="setupBarHint" style="font-size: 12px; color: var(--text-muted); align-self: center; margin-left: 12px;">Enter admin secret to load statistics.</span>
+  </div>
+
+  <div class="layout hidden" id="authenticatedShell">
+
+    <!-- ── Left: call list ───────────────────────────────── -->
+    <aside class="left">
+      <div class="left-header">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <div>
+            <h2>Calls</h2>
+            <div class="subtitle" id="review-count">0/0 reviewed</div>
+          </div>
+          <div style="display: flex; gap: 8px;">
+            <a href="/qa/dashboard" class="btn-download-top" style="padding: 8px 12px; font-size: 12px; background: #007bff;">
+              <svg viewBox="0 0 24 24" style="width:16px; height:16px;">
+                <path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z" />
+              </svg>
+              Dashboard
+            </a>
+            <button type="button" onclick="downloadAllCsv()" class="btn-download-top" style="padding: 8px 12px; font-size: 12px; border: none; cursor: pointer; color: white; display: flex; align-items: center; gap: 6px; border-radius: 6px; font-weight: 500; font-family: inherit; transition: background .12s;">
+              <svg viewBox="0 0 24 24" style="width:16px; height:16px; fill: currentColor;">
+                <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z" />
+              </svg>
+              All CSV
+            </button>
+          </div>
+        </div>
+      </div>
+      <div class="company-picker-wrap">
+        <div class="agent-picker" id="companyPicker">
+          <button type="button" class="agent-trigger" id="companyTrigger" aria-haspopup="listbox" aria-expanded="false">
+            <span id="companyTriggerLabel">Select a company…</span>
+            <span class="agent-trigger-chevron">▼</span>
+          </button>
+          <div class="agent-dropdown hidden" id="companyDropdown">
+            <div class="agent-search-wrap">
+              <input id="companySearchInput" type="search" placeholder="Search company…" autocomplete="off" />
+            </div>
+            <div class="agent-options-list" id="companyOptionsList"></div>
+          </div>
+        </div>
+      </div>
+      <div class="filter-controls">
+        <input id="search" type="search" placeholder="Search by name, number..." />
+        <input id="date-filter" type="date" title="Filter by date" />
+      </div>
+      <div class="call-list" id="call-list">
+        <div class="spinner"></div>
+      </div>
+    </aside>
+
+    <!-- ── Right: rating panel ───────────────────────────── -->
+    <main class="right" id="right-panel">
+      <div class="empty-state">
+        <div class="empty-icon">🎧</div>
+        <p>Select a call to review</p>
+      </div>
+    </main>
+
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast"></div>
+
+  <script>
+    const BASE = '/api/quality';
+    const STORAGE_KEY = 'voice_analytics_config';
+    let adminSecret = '';
+    let currentCompanyId = '';
+    let companiesCache = [];
+    let companyDropdownOpen = false;
+    let calls = [];
+    let activeId = null;
+
+    function loadAdminSecret() {
+      const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+      adminSecret = (saved.adminSecret || '').trim();
+      const shell = document.getElementById('authenticatedShell');
+      const setup = document.getElementById('setupBar');
+      const input = document.getElementById('adminSecret');
+      
+      if (adminSecret) {
+        if (input) input.value = adminSecret;
+        if (setup) setup.style.display = 'none';
+        if (shell) shell.classList.remove('hidden');
+        loadCompanies();
+        setInterval(loadCalls, 15000);
+      } else {
+        if (setup) setup.style.display = 'flex';
+        if (shell) shell.classList.add('hidden');
+      }
+    }
+
+    function saveAuth() {
+      const val = document.getElementById('adminSecret').value.trim();
+      if (!val) { alert("Please enter an admin secret."); return; }
+      adminSecret = val;
+      const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+      saved.adminSecret = val;
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(saved));
+      
+      document.getElementById('setupBar').style.display = 'none';
+      document.getElementById('authenticatedShell').classList.remove('hidden');
+      loadCompanies();
+      // Optional: setInterval(loadCalls, 15000); // Only starts once due to logic
+    }
+
+    function authHeaders(extra) {
+      const h = { 'Content-Type': 'application/json', ...extra };
+      if (adminSecret) h['X-ADMIN-SECRET'] = adminSecret;
+      return h;
+    }
+
+    // ── Company dropdown ─────────────────────────────────────────
+    function renderCompanyDropdown(companies, query) {
+      const list = document.getElementById('companyOptionsList');
+      const allOpt = `<button type="button" class="agent-option${!currentCompanyId ? ' active' : ''}" data-key="" data-label="All companies">
+        <div class="agent-option-name">All companies</div>
+        <div class="agent-option-sub">Show calls from every company</div>
+      </button>`;
+      const items = (companies || []).map(c => {
+        const active = currentCompanyId === c.company_id ? ' active' : '';
+        return `<button type="button" class="agent-option${active}" data-key="${escHtml(c.company_id)}" data-label="${escHtml(c.company_name)}">
+          <div class="agent-option-name">${escHtml(c.company_name)}</div>
+          <div class="agent-option-sub">ID: ${escHtml(c.company_id)}</div>
+        </button>`;
+      }).join('');
+      list.innerHTML = allOpt + (items || `<div class="agent-empty">No companies found</div>`);
+      list.querySelectorAll('.agent-option').forEach(btn => {
+        btn.addEventListener('click', () => {
+          currentCompanyId = btn.dataset.key || '';
+          document.getElementById('companyTriggerLabel').textContent = btn.dataset.label;
+          closeCompanyDropdown();
+          loadCalls();
+        });
+      });
+    }
+
+    function closeCompanyDropdown() {
+      companyDropdownOpen = false;
+      document.getElementById('companyDropdown').classList.add('hidden');
+      document.getElementById('companyTrigger').classList.remove('open');
+      document.getElementById('companyTrigger').setAttribute('aria-expanded', 'false');
+    }
+
+    function openCompanyDropdown() {
+      companyDropdownOpen = true;
+      document.getElementById('companyDropdown').classList.remove('hidden');
+      document.getElementById('companyTrigger').classList.add('open');
+      document.getElementById('companyTrigger').setAttribute('aria-expanded', 'true');
+      const search = document.getElementById('companySearchInput');
+      search.value = '';
+      renderCompanyDropdown(companiesCache, '');
+      setTimeout(() => search.focus(), 0);
+    }
+
+    async function loadCompanies() {
+      if (!adminSecret) return;
+      try {
+        const res = await fetch(`${BASE}/companies`, { headers: authHeaders() });
+        const data = await res.json();
+        companiesCache = data.companies || [];
+        // Default to "All companies"
+        currentCompanyId = '';
+        document.getElementById('companyTriggerLabel').textContent = 'All companies';
+        loadCalls();
+      } catch (e) {
+        console.error('Failed to load companies', e);
+      }
+    }
+
+    document.getElementById('companyTrigger').addEventListener('click', (e) => {
+      e.stopPropagation();
+      companyDropdownOpen ? closeCompanyDropdown() : openCompanyDropdown();
+    });
+    document.getElementById('companySearchInput').addEventListener('keyup', (e) => {
+      const q = e.target.value.toLowerCase();
+      const filtered = q ? companiesCache.filter(c =>
+        (c.company_name || '').toLowerCase().includes(q) ||
+        (c.company_id || '').toLowerCase().includes(q)
+      ) : companiesCache;
+      renderCompanyDropdown(filtered, q);
+    });
+    document.getElementById('companyDropdown').addEventListener('click', (e) => e.stopPropagation());
+    document.addEventListener('click', (e) => {
+      if (companyDropdownOpen && !document.getElementById('companyPicker').contains(e.target)) {
+        closeCompanyDropdown();
+      }
+    });
+
+    const $list = document.getElementById('call-list');
+    const $right = document.getElementById('right-panel');
+    const $meta = document.getElementById('header-meta');
+    const $count = document.getElementById('review-count');
+    const $search = document.getElementById('search');
+    const $toast = document.getElementById('toast');
+
+    // ── Helpers ──────────────────────────────────────────────────
+    function showToast(msg, isError = false) {
+      $toast.textContent = msg;
+      $toast.className = 'toast' + (isError ? ' error' : '') + ' show';
+      setTimeout(() => $toast.classList.remove('show'), 2800);
+    }
+
+    function fmtDate(iso) {
+      if (!iso) return '—';
+      const d = new Date(iso);
+      const options = { timeZone: 'Europe/Stockholm', hour: '2-digit', minute: '2-digit', hour12: false };
+      const dateOptions = { timeZone: 'Europe/Stockholm', year: 'numeric', month: '2-digit', day: '2-digit' };
+      return d.toLocaleDateString('sv-SE', dateOptions) + ' · ' + d.toLocaleTimeString('sv-SE', options);
+    }
+
+    function agentShort(id) {
+      if (!id) return 'Unknown';
+      if (id.length <= 12) return id;
+      return id.substring(0, 8) + '…';
+    }
+
+    // ── Fetch call list ──────────────────────────────────────────
+    async function loadCalls() {
+      try {
+        const url = currentCompanyId
+          ? `${BASE}/calls?company_id=${encodeURIComponent(currentCompanyId)}`
+          : `${BASE}/calls`;
+        const res = await fetch(url, { headers: authHeaders() });
+        calls = await res.json();
+        applyFilters();
+      } catch (e) {
+        $list.innerHTML = '<div style="padding:20px;color:var(--text-muted);font-size:13px;">Failed to load calls</div>';
+      }
+    }
+
+    function renderList(filteredData) {
+      const reviewed = filteredData.filter(c => c.is_reviewed).length;
+      // Show reviewed count out of the FULL list 'calls', not just the filtered one
+      $count.textContent = `${calls.filter(c => c.is_reviewed).length}/${calls.length} reviewed`;
+
+      if (!filteredData.length) {
+        const isFiltering = $search.value || $dateFilter.value;
+        const msg = isFiltering ? 'No logs found matching your filters.' : 'No calls yet.';
+        $list.innerHTML = `<div style="padding:24px 18px;color:var(--text-muted);font-size:14px;text-align:center;">${msg}</div>`;
+        return;
+      }
+
+      $list.innerHTML = filteredData.map(c => `
+      <div class="call-card ${c.call_id === activeId ? 'active' : ''}" data-id="${c.call_id}">
+        <div class="card-top">
+          <span class="card-id">${escHtml(c.call_id)}</span>
+          <span class="badge status-${c.is_reviewed ? 'completed' : 'pending'}">
+            ${c.is_reviewed ? 'completed' : 'pending'}
+          </span>
+        </div>
+        <div class="card-meta">
+          ${fmtDate(c.received_at)} · ${c.call_duration_fmt}
+        </div>
+        <div class="card-submeta">
+          ${escHtml(c.customer_number || '')} Agent: ${escHtml(c.assistant_name || agentShort(c.assistant_id))}
+        </div>
+        ${c.summary ? `<div class="card-summary">${escHtml(c.summary)}</div>` : ''}
+      </div>
+    `).join('');
+
+      $list.querySelectorAll('.call-card').forEach(el => {
+        el.addEventListener('click', () => selectCall(el.dataset.id));
+      });
+    }
+
+    function escHtml(s) {
+      return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    // ── Select a call ────────────────────────────────────────────
+    async function selectCall(id) {
+      activeId = id;
+      document.querySelectorAll('.call-card').forEach(el => {
+        el.classList.toggle('active', el.dataset.id === id);
+      });
+
+      const $left = document.querySelector('.left');
+      const $right_panel = document.getElementById('right-panel');
+      
+      // On small screens, hide list and show right panel
+      if (window.innerWidth <= 768) {
+        $left.classList.add('hidden');
+        $right_panel.classList.add('active');
+      }
+
+      $right.innerHTML = '<div style="flex:1;display:flex;align-items:center;justify-content:center"><div class="spinner"></div></div>';
+
+      try {
+        const res = await fetch(`${BASE}/calls/${encodeURIComponent(id)}`, { headers: authHeaders() });
+        const c = await res.json();
+        renderRightPanel(c);
+      } catch (e) {
+        $right.innerHTML = '<div class="empty-state"><p>Failed to load call details</p></div>';
+      }
+    }
+
+    function goBackToList() {
+      activeId = null;
+      const $left = document.querySelector('.left');
+      const $right_panel = document.getElementById('right-panel');
+      
+      $left.classList.remove('hidden');
+      $right_panel.classList.remove('active');
+      
+      $right.innerHTML = `
+        <div class="empty-state">
+          <div class="empty-icon">🎧</div>
+          <p>Select a call to review</p>
+        </div>
+      `;
+      document.querySelectorAll('.call-card').forEach(el => el.classList.remove('active'));
+    }
+
+    // ── Render right panel ───────────────────────────────────────
+    function renderRightPanel(c) {
+      const dt = c.received_at ? new Date(c.received_at) : null;
+      const metaLine = [
+        dt ? dt.toLocaleDateString('sv-SE') : '',
+        dt ? dt.toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' }) : '',
+        c.call_duration_fmt,
+        c.assistant_name ? `Agent: ${c.assistant_name}` : (c.assistant_id ? `Agent: ${agentShort(c.assistant_id)}` : ''),
+      ].filter(Boolean).join(' · ');
+
+      $right.innerHTML = `
+      <div class="right-header" style="flex-direction:column; align-items:flex-start;">
+        <button class="btn-back" onclick="goBackToList()">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+          Back to List
+        </button>
+        <div style="display:flex; justify-content:space-between; width:100%; align-items:flex-start;">
+          <div>
+            <h3>${escHtml(c.call_id)}</h3>
+            <div class="meta-line">${escHtml(metaLine)}</div>
+          </div>
+          <a href="/api/quality/export/csv?call_id=${encodeURIComponent(c.call_id)}" 
+             class="btn-download-top ${c.is_reviewed ? '' : 'disabled'}" 
+             id="dl-csv-btn">
+            <svg viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
+            CSV
+          </a>
+        </div>
+      </div>
+
+      <div class="right-body">
+
+        ${c.transcript ? `
+        <div class="transcript-card">
+          <h4>Transcript</h4>
+          <div class="transcript-text">${escHtml(c.transcript)}</div>
+        </div>` : ''}
+
+        <div class="ratings-block">
+          <div class="section-label">Ratings</div>
+          ${ratingRow('overall', 'Overall', c.overall_rating, true)}
+          ${ratingRow('name', 'Name Correctness', c.name_correctness, true)}
+          ${ratingRow('numbers', 'Numbers / Date / Time', c.numbers_correctness, true)}
+          ${ratingRow('address', 'Address', c.address_correctness, true)}
+        </div>
+
+        <div class="issues-block">
+          <div class="section-label">Issues</div>
+          <div class="issues-row">
+            ${issueCheck('silent', '🔇', 'Silent', c.is_silent)}
+            ${issueCheck('hungup', '📵', 'Hung up', c.hung_up)}
+            ${issueCheck('hallucinated', '🌀', 'Hallucinated', c.hallucinated)}
+          </div>
+        </div>
+
+        <div class="fields-block">
+          <div class="fields-block">
+        <div class="field-group">
+          <label>Summary</label>
+          <textarea id="val-summary" placeholder="Internal notes...">${escHtml(c.summary || '')}</textarea>
+        </div>
+        ${c.summary_by_ai ? `
+        <div class="field-group">
+          <label>AI Summary (Read-only)</label>
+          <div class="ai-summary-box">${escHtml(c.summary_by_ai)}</div>
+        </div>` : ''}
+      </div>
+
+      </div>
+
+      <div class="right-footer">
+        <button class="btn-submit" id="submit-btn" onclick="submitRating('${escHtml(c.call_id)}')">
+          Submit Review
+        </button>
+      </div>
+    `;
+
+      // Chip click handlers
+      $right.querySelectorAll('.star-chip').forEach(chip => {
+        chip.addEventListener('click', () => {
+          const group = chip.dataset.group;
+          $right.querySelectorAll(`.star-chip[data-group="${group}"]`).forEach(c => c.classList.remove('selected'));
+          chip.classList.add('selected');
+          checkFormValidity();
+        });
+      });
+
+      checkFormValidity();
+    }
+
+    function checkFormValidity() {
+      const groups = ['overall', 'name', 'numbers', 'address'];
+      let allValid = true;
+      groups.forEach(g => {
+        if (getChipVal(g) === null) allValid = false;
+      });
+
+      const btn = document.getElementById('submit-btn');
+      if (btn) {
+        btn.disabled = !allValid;
+        btn.title = allValid ? '' : 'Please select a rating for all 4 categories';
+      }
+    }
+
+    function ratingRow(key, label, current, required) {
+      const chips = [1, 2, 3, 4, 5].map(n => `
+      <button class="star-chip ${current === n ? 'selected' : ''}" data-group="${key}" data-val="${n}">${n}</button>
+    `).join('');
+      return `
+      <div class="rating-row">
+        <span class="rating-label">
+          ${escHtml(label)}
+          ${required ? '<span class="required-star">★</span>' : ''}
+        </span>
+        <div class="star-chips">${chips}</div>
+      </div>
+    `;
+    }
+
+    function issueCheck(key, icon, label, checked) {
+      return `
+      <label class="issue-label">
+        <input type="checkbox" id="issue-${key}" ${checked ? 'checked' : ''} />
+        <div class="issue-content">
+          <div class="issue-box">${icon}</div>
+          <span class="issue-name">${label}</span>
+        </div>
+      </label>
+    `;
+    }
+
+    function getChipVal(group) {
+      const sel = $right.querySelector(`.star-chip[data-group="${group}"].selected`);
+      return sel ? parseInt(sel.dataset.val) : null;
+    }
+
+    async function submitRating(callId) {
+      const btn = document.getElementById('submit-btn');
+      btn.disabled = true;
+      btn.textContent = 'Saving…';
+
+      const payload = {
+        overall_rating: getChipVal('overall'),
+        name_correctness: getChipVal('name'),
+        numbers_correctness: getChipVal('numbers'),
+        address_correctness: getChipVal('address'),
+        is_silent: document.getElementById('issue-silent')?.checked ?? false,
+        hung_up: document.getElementById('issue-hungup')?.checked ?? false,
+        hallucinated: document.getElementById('issue-hallucinated')?.checked ?? false,
+        summary: document.getElementById('val-summary').value,
+      };
+
+      try {
+        const res = await fetch(`${BASE}/calls/${encodeURIComponent(callId)}/rate`, {
+          method: 'POST',
+          headers: authHeaders({ 'Content-Type': 'application/json' }),
+          body: JSON.stringify(payload),
+        });
+        if (!res.ok) throw new Error(await res.text());
+        showToast('✓ Review saved');
+        await loadCalls();
+        // Re-highlight active card
+        document.querySelectorAll('.call-card').forEach(el => {
+          el.classList.toggle('active', el.dataset.id === callId);
+        });
+      } catch (e) {
+        showToast('Failed to save: ' + e.message, true);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Submit Review';
+      }
+    }
+
+    // ── Search & Date filter ─────────────────────────────────────
+    const $dateFilter = document.getElementById('date-filter');
+
+    function applyFilters() {
+      const q = $search.value.toLowerCase();
+      const dateVal = $dateFilter.value; // YYYY-MM-DD
+
+      const filtered = calls.filter(c => {
+        // Search filter
+        const matchesSearch = c.call_id.toLowerCase().includes(q) ||
+          (c.customer_number || '').toLowerCase().includes(q) ||
+          (c.assistant_name || '').toLowerCase().includes(q) ||
+          (c.assistant_id || '').toLowerCase().includes(q) ||
+          (c.summary || '').toLowerCase().includes(q);
+
+        // Date filter
+        let matchesDate = true;
+        if (dateVal && c.received_at) {
+          // Convert received_at (UTC) to Stockholm date string for comparison
+          const callDate = new Date(c.received_at).toLocaleDateString('sv-SE', { timeZone: 'Europe/Stockholm' });
+          matchesDate = (callDate === dateVal);
+        }
+
+        return matchesSearch && matchesDate;
+      });
+      renderList(filtered);
+    }
+
+    $search.addEventListener('input', applyFilters);
+    $dateFilter.addEventListener('change', applyFilters);
+
+    async function downloadAllCsv() {
+      try {
+        const url = currentCompanyId
+          ? `${BASE}/export/csv?company_id=${encodeURIComponent(currentCompanyId)}`
+          : `${BASE}/export/csv`;
+        const res = await fetch(url, { headers: authHeaders() });
+        if (!res.ok) {
+          const err = await res.text();
+          throw new Error(`Server returned ${res.status}: ${err}`);
+        }
+        const blob = await res.blob();
+        const blobUrl = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.style.display = 'none';
+        a.href = blobUrl;
+        a.download = `calls_export_${new Date().toISOString().split('T')[0]}.csv`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(blobUrl);
+      } catch (e) {
+        showToast('Failed to download CSV: ' + e.message, true);
+      }
+    }
+
+    // ── Init ─────────────────────────────────────────────────────
+    loadAdminSecret();  // pull saved secret and check if logged in
+  </script>
+</body>
+
+</html>
